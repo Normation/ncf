@@ -1,0 +1,7 @@
+# 
+
+bundle agent admin_tools(path)
+{
+  methods:
+      "any" usebundle => admintools;
+}
