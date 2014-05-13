@@ -22,8 +22,10 @@ body common control
 bundle agent init
 {
   vars:
-    "package_name"            string => "htop";
-    "canonified_package_name" string => canonify("${package_name}");
+    "package_name_1"            string => "htop";
+    "canonified_package_name_1" string => canonify("${package_name}");
+    "package_name_2"            string => "tree";
+    "canonified_package_name_2" string => canonify("${package_name}");
 }
 
 #######################################################
@@ -31,7 +33,8 @@ bundle agent init
 bundle agent test
 {
   methods:
-    "ph1" usebundle => package_install("${init.package_name}");
+    "ph1" usebundle => package_install("${init.package_name_1}");
+    "ph2" usebundle => package_install_version_cmp_update_arch("${init.package_name_2}","==","latest","add","true","i586");
 }
 
 #######################################################
@@ -39,7 +42,9 @@ bundle agent test
 bundle agent check
 {
   classes:
-    "ok" expression => "package_install_${init.canonified_package_name}_ok.!package_install_${init.canonified_package_name}_error";
+    "ok_pkg_1" expression => "package_install_${init.canonified_package_name_1}_ok.!package_install_${init.canonified_package_name_1}_error";
+    "ok_pkg_2" expression => "package_install_${init.canonified_package_name_2}_ok.!package_install_${init.canonified_package_name_2}_error";
+    "ok"       and => {"ok_pkg_1", "ok_pkg_2"};
 
   reports:
     ok::
