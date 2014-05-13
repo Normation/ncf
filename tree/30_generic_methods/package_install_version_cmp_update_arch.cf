@@ -1,5 +1,5 @@
 #####################################################################################
-# Copyright 2013 Normation SAS
+# Copyright 2014 Normation SAS
 #####################################################################################
 #
 # This program is free software: you can redistribute it and/or modify
@@ -24,6 +24,7 @@
 # @parameter package_version     The version of the package to verify (can be "latest" for latest version)
 # @parameter action              Action to perform, can be add, verify (defaults to verify)
 # @parameter update_policy       While verifying packages, check against latest version ("true") or just installed ("false")
+# @parameter architecture        Specify which architecture should be use for the package (i.e 'x86_64', 'i386', 'i586',...) or 'none'
 # 
 # @class_prefix package_install
 # @class_parameter package_name
@@ -31,30 +32,31 @@
 # 
 # Usage example:
 # methods:
-#     "any" usebundle => package_install_version_cmp_update("postgresql", ">=", "9.1", "verify", "false");
+#     "any" usebundle => package_install_version_cmp_update_arch("postgresql", ">=", "9.1", "verify", "false","i586");
 
-bundle agent package_install_version_cmp_update(package_name, version_comparator, package_version, action, update_policy)
+bundle agent package_install_version_cmp_update_arch(package_name, version_comparator, package_version, action, update_policy, architecture)
 {
   vars:
       "canonified_package_name" string => canonify("${package_name}");
       "class_prefix"            string => "package_install_${canonified_package_name}";
 
   defaults:
-      "action" string => "immediate", if_match_regex => "add";
-      "action" string => "warn_only", if_match_regex => "verify|";
+      "action"        string => "immediate", if_match_regex => "add";
+      "action"        string => "warn_only", if_match_regex => "verify|";
       "update_policy" string => "addupdate", if_match_regex => "true";
       "update_policy" string => "add",       if_match_regex => "false";
 
   classes:
-      "local_package" expression => regcmp("(http:|file:)?/.*", "${package_name}");
+      "local_package"         expression => regcmp("(http:|file:)?/.*", "${package_name}");
       "version_not_specified" expression => strcmp("latest", "${package_version}");
-      "immediate" expression => strcmp("immediate", "${action}");
-      "update"    expression => strcmp("addupdate", "${update_policy}");
+      "immediate"             expression => strcmp("immediate", "${action}");
+      "update"                expression => strcmp("addupdate", "${update_policy}");
+      "arch_not_specified"    expression => strcmp("none", "${architecture}");
 
   packages:
 
     ## Debian support ##
-    !version_not_specified.local_package.debian::
+    arch_not_specified.!version_not_specified.local_package.debian::
       "${package_name}"
                         package_policy  => "${update_policy}",
                         package_version => "${package_version}",
@@ -63,8 +65,17 @@ bundle agent package_install_version_cmp_update(package_name, version_comparator
                         classes         => classes_generic("${class_prefix}"),
                         action          => do_if_immediate;
 
+    !arch_not_specified.!version_not_specified.local_package.debian::
+      "${package_name}"
+                        package_policy        => "${update_policy}",
+                        package_version       => "${package_version}",
+                        package_select        => "${version_comparator}",
+                        package_method        => debian_local_install,
+                        package_architectures => { "${architecture}" },
+                        classes               => classes_generic("${class_prefix}"),
+                        action                => do_if_immediate;
 
-    !version_not_specified.!local_package.debian::
+    arch_not_specified.!version_not_specified.!local_package.debian::
       "${package_name}"
                         package_policy  => "${update_policy}",
                         package_version => "${package_version}",
@@ -73,23 +84,49 @@ bundle agent package_install_version_cmp_update(package_name, version_comparator
                         classes         => classes_generic("${class_prefix}"),
                         action          => do_if_immediate;
 
+    !arch_not_specified.!version_not_specified.!local_package.debian::
+      "${package_name}"
+                        package_policy        => "${update_policy}",
+                        package_version       => "${package_version}",
+                        package_select        => "${version_comparator}",
+                        package_architectures => { "${architecture}" },
+                        package_method        => apt_get,
+                        classes               => classes_generic("${class_prefix}"),
+                        action                => do_if_immediate;
 
-    version_not_specified.local_package.debian::
+
+    arch_not_specified.version_not_specified.local_package.debian::
       "${package_name}"
                         package_policy => "${update_policy}",
                         package_method => debian_local_install,
                         classes        => classes_generic("${class_prefix}"),
                         action         => do_if_immediate;
 
-    version_not_specified.!local_package.debian::
+    !arch_not_specified.version_not_specified.local_package.debian::
+      "${package_name}"
+                        package_policy        => "${update_policy}",
+                        package_architectures => { "${architecture}" },
+                        package_method        => debian_local_install,
+                        classes               => classes_generic("${class_prefix}"),
+                        action                => do_if_immediate;
+
+    arch_not_specified.version_not_specified.!local_package.debian::
       "${package_name}"
                         package_policy => "${update_policy}",
                         package_method => apt_get,
                         classes        => classes_generic("${class_prefix}"),
                         action         => do_if_immediate;
 
+    !arch_not_specified.version_not_specified.!local_package.debian::
+      "${package_name}"
+                        package_policy        => "${update_policy}",
+                        package_architectures => { "${architecture}" },
+                        package_method        => apt_get,
+                        classes               => classes_generic("${class_prefix}"),
+                        action                => do_if_immediate;
+
     ## RedHat support ##
-    !version_not_specified.local_package.redhat::
+    arch_not_specified.!version_not_specified.local_package.redhat::
       "${package_name}"
                         package_policy  => "${update_policy}",
                         package_version => "${package_version}",
@@ -98,7 +135,17 @@ bundle agent package_install_version_cmp_update(package_name, version_comparator
                         classes         => classes_generic("${class_prefix}"),
                         action          => do_if_immediate;
 
-    !version_not_specified.!local_package.redhat::
+    !arch_not_specified.!version_not_specified.local_package.redhat::
+      "${package_name}"
+                        package_policy        => "${update_policy}",
+                        package_version       => "${package_version}",
+                        package_select        => "${version_comparator}",
+                        package_architectures => { "${architecture}" },
+                        package_method        => redhat_local_install,
+                        classes               => classes_generic("${class_prefix}"),
+                        action                => do_if_immediate;
+
+    arch_not_specified.!version_not_specified.!local_package.redhat::
       "${package_name}"
                         package_policy  => "${update_policy}",
                         package_version => "${package_version}",
@@ -107,24 +154,49 @@ bundle agent package_install_version_cmp_update(package_name, version_comparator
                         classes         => classes_generic("${class_prefix}"),
                         action          => do_if_immediate;
 
+    !arch_not_specified.!version_not_specified.!local_package.redhat::
+      "${package_name}"
+                        package_policy        => "${update_policy}",
+                        package_version       => "${package_version}",
+                        package_select        => "${version_comparator}",
+                        package_architectures => { "${architecture}" },
+                        package_method        => yum_rpm,
+                        classes               => classes_generic("${class_prefix}"),
+                        action                => do_if_immediate;
 
-    version_not_specified.local_package.redhat::
+    arch_not_specified.version_not_specified.local_package.redhat::
       "${package_name}"
                         package_policy => "${update_policy}",
                         package_method => redhat_local_install,
                         classes        => classes_generic("${class_prefix}"),
                         action         => do_if_immediate;
 
+    !arch_not_specified.version_not_specified.local_package.redhat::
+      "${package_name}"
+                        package_policy        => "${update_policy}",
+                        package_architectures => { "${architecture}" },
+                        package_method        => redhat_local_install,
+                        classes               => classes_generic("${class_prefix}"),
+                        action                => do_if_immediate;
 
-    version_not_specified.!local_package.redhat::
+
+    arch_not_specified.version_not_specified.!local_package.redhat::
       "${package_name}"
                         package_policy => "${update_policy}",
                         package_method => yum_rpm,
                         classes        => classes_generic("${class_prefix}"),
                         action         => do_if_immediate;
 
+    !arch_not_specified.version_not_specified.!local_package.redhat::
+      "${package_name}"
+                        package_policy        => "${update_policy}",
+                        package_architectures => { "${architecture}" },
+                        package_method        => yum_rpm,
+                        classes               => classes_generic("${class_prefix}"),
+                        action                => do_if_immediate;
+
     ## SUSE support ##
-    !version_not_specified.local_package.SuSE::
+    arch_not_specified.!version_not_specified.local_package.SuSE::
       "${package_name}"
                         package_policy  => "${update_policy}",
                         package_version => "${package_version}",
@@ -133,7 +205,18 @@ bundle agent package_install_version_cmp_update(package_name, version_comparator
                         classes         => classes_generic("${class_prefix}"),
                         action          => do_if_immediate;
 
-    !version_not_specified.!local_package.SuSE::
+    !arch_not_specified.!version_not_specified.local_package.SuSE::
+      "${package_name}"
+                        package_policy        => "${update_policy}",
+                        package_version       => "${package_version}",
+                        package_select        => "${version_comparator}",
+                        package_architectures => { "${architecture}" },
+                        package_method        => zypper_set_arch,
+                        classes               => classes_generic("${class_prefix}"),
+                        action                => do_if_immediate;
+
+
+    arch_not_specified.!version_not_specified.!local_package.SuSE::
       "${package_name}"
                         package_policy  => "${update_policy}",
                         package_version => "${package_version}",
@@ -142,21 +225,46 @@ bundle agent package_install_version_cmp_update(package_name, version_comparator
                         classes         => classes_generic("${class_prefix}"),
                         action          => do_if_immediate;
 
+    !arch_not_specified.!version_not_specified.!local_package.SuSE::
+      "${package_name}"
+                        package_policy  => "${update_policy}",
+                        package_version => "${package_version}",
+                        package_select  => "${version_comparator}",
+                        package_architectures => { "${architecture}" },
+                        package_method  => zypper_set_arch,
+                        classes         => classes_generic("${class_prefix}"),
+                        action          => do_if_immediate;
 
-    version_not_specified.local_package.SuSE::
+    arch_not_specified.version_not_specified.local_package.SuSE::
       "${package_name}"
                         package_policy => "${update_policy}",
                         package_method => generic,
                         classes        => classes_generic("${class_prefix}"),
                         action         => do_if_immediate;
 
+    !arch_not_specified.version_not_specified.local_package.SuSE::
+      "${package_name}"
+                        package_policy        => "${update_policy}",
+                        package_architectures => { "${architecture}" },
+                        package_method        => zypper_set_arch,
+                        classes               => classes_generic("${class_prefix}"),
+                        action                => do_if_immediate;
 
-    version_not_specified.!local_package.SuSE::
+    arch_not_specified.version_not_specified.!local_package.SuSE::
       "${package_name}"
                         package_policy => "${update_policy}",
                         package_method => generic,
                         classes        => classes_generic("${class_prefix}"),
                         action         => do_if_immediate;
+
+    !arch_not_specified.version_not_specified.!local_package.SuSE::
+      "${package_name}"
+                        package_policy        => "${update_policy}",
+                        package_architectures => { "${architecture}" },
+                        package_method        => zypper_set_arch,
+                        classes               => classes_generic("${class_prefix}"),
+                        action                => do_if_immediate;
+
 
   methods:
     immediate.!update::
