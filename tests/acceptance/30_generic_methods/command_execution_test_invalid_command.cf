@@ -39,7 +39,7 @@ bundle agent test
 bundle agent check
 {
   classes:
-    "ok" expression => "command_execution_${init.canonified_command_name}_ok.!command_execution_${init.canonified_command_name}_error";
+    "ok" expression => "command_execution_module_${init.canonified_command_name}_ok.!command_execution_module_${init.canonified_command_name}_error";
 
   reports:
     DEBUG::
