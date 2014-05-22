@@ -31,17 +31,18 @@ bundle agent command_execution_module(command_name, module, shell)
 {
   vars:
       "class_prefix"
-         string  => canonify("command_execution_module_${command_name}");
-
-  commands:
-      "${command_name}"
-         module     => "${module}",
-         contain    => command_execution_module_contain("${shell}"),
-         classes    => classes_generic("${class_prefix}");
+         string    => canonify("command_execution_module_${command_name}");
 
   methods:
       "report"
-        usebundle => _logger("Execute the command ${command_name}", "${class_prefix}");
+        usebundle  => _logger("Execute the command ${command_name}", "${class_prefix}"),
+        ifvarclass => "${class_prefix}_reached";
+
+  commands:
+      "${command_name}"
+         module    => "${module}",
+         contain   => command_execution_module_contain("${shell}"),
+         classes   => classes_generic("${class_prefix}");
 }
 
 body contain command_execution_module_contain(shell)
