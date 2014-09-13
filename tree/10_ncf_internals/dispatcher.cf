@@ -30,20 +30,18 @@ bundle agent dispatcher
       "services" slist => { "@{mapper.services}" };
 
   classes:
-      "mapper_services_exists" expression => isvariable("mapper.services");
-
-    mapper_services_exists::
       # Extract from the services variable the base path, the service name, and the service version
       # key 1 is the base (relative to 60_services)
       # key 2 is the service name
       # key 3 is the service version  (oldstable, stable, testing, unstable)
-      "services_array_defined" expression => regextract("(.*)/([^/]+)/([^/]+)", "${services}", "services_array_${services}");
+      "services_array_${services}_defined" expression => regextract("(.*)/([^/]+)/([^/]+)", "${services}", "services_array_${services}");
 
   methods:
-    services_array_defined.dispatcher_reports_reached::
+    dispatcher_reports_reached::
       "${services_array_${services}[2]}" 
         usebundle => caller("${services_array_${services}[0]}", "${services_array_${services}[2]}", "${services_array_${services}[3]}"),
-        classes   => classes_generic("dispatcher_${apps_array_${base_apps}[2]}");
+        classes   => classes_generic("dispatcher_${apps_array_${base_apps}[2]}"),
+        ifvarclass => canonify("services_array_${services}_defined");
 
   reports:
     !mapper_services_exists::
