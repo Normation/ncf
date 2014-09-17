@@ -323,7 +323,7 @@ app.controller('ncf-builder', function ($scope, $modal, $http, $log, $location, 
 
   // Get the class value generated from a class prefix and a class kind (kept,repaired,error, ...)
   $scope.getClassKind= function(method_call,kind) {
-    var param = $scope.getClassParameter(method_call).replace(/\W/g,"_");
+    var param = $scope.getClassParameter(method_call).replace(/\\'/g, "'").replace(/\\"/g, '"').replace(/\W/g,"_");
     return  $scope.getClassPrefix(method_call)+"_"+param +"_"+kind
   }
 
