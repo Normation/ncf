@@ -28,7 +28,7 @@ dirs = [ "10_ncf_internals", "20_cfe_basics", "30_generic_methods", "40_it_ops_k
 tags = {}
 tags["common"] = ["bundle_name", "bundle_args"]
 tags["generic_method"] = ["name", "description", "parameter", "class_prefix", "class_parameter", "class_parameter_id", "deprecated"]
-tags["technique"] = ["name", "description", "version", "parameter"]
+tags["technique"] = ["name", "description", "version", "parameter", "variables"]
 optionnal_tags = [ "deprecated" ]
 
 multiline_tags = [ "description" ]
@@ -208,6 +208,7 @@ def parse_bundlefile_metadata(content, bundle_type):
   # technique can have parameters or no parameter
   if bundle_type == "technique":
     expected_tags.remove("parameter")
+    expected_tags.remove("variables")
   if not set(expected_tags).issubset(set(res.keys())):
     missing_keys = [mkey for mkey in expected_tags if mkey not in set(res.keys())]
     name = res['bundle_name'] if 'bundle_name' in res else "unknown"
@@ -239,7 +240,6 @@ def class_context_and(a, b):
 
   return '.'.join(final_contexts)
 
-
 def parse_function_call_class_context(function_call):
   """Extract a function call from class context"""
   function_name = function_call['name']
@@ -247,10 +247,7 @@ def parse_function_call_class_context(function_call):
   # This is valid for string parameters only should improve for inner function
   return function_name + '(' + ','.join(function_args) + ')'
 
-
-def parse_technique_methods(technique_file):
-  res = []
-
+def parse_technique(technique_file):
   # Check file exists
   if not os.path.exists(technique_file):
     raise NcfError("No such file: " + technique_file)
@@ -272,6 +269,10 @@ def parse_technique_methods(technique_file):
   # Sanity check: the bundle must be of type agent
   if promises['bundles'][0]['bundleType'] != 'agent':
     raise NcfError("This bundle is not a bundle agent in " + technique_file + ", aborting")
+  return promises
+
+def parse_technique_methods(promises):
+  res = []
 
   methods_promises = [promiseType for promiseType in promises['bundles'][0]['promiseTypes'] if promiseType['name']=="methods"]
   methods = []
@@ -341,6 +342,70 @@ def parse_technique_methods(technique_file):
 
   return res
 
+def parse_technique_variables(promises):
+  res = []
+
+  variables_promises = [promiseType for promiseType in promises['bundles'][0]['promiseTypes'] if promiseType['name']=="vars"]
+  variables = []
+  if len(variables_promises) >= 1:
+    variables = variables_promises[0]['contexts']
+
+  for context in variables:
+    class_context = context['name']
+    if class_context != "any":
+      raise Exception("This bundle contains vars in class context, aborting")
+
+    for variable in context['promises']:
+      var_name = variable['promiser']
+      var_value = None
+      for attribute in variable['attributes']:
+        if attribute['lval'] != 'string' or attribute['rval']['type'] != 'string':
+          raise Exception("This bundle contains non-string variables, aborting")
+        var_value = attribute['rval']['value']
+
+      res.append({'name': var_name, 'value': var_value})
+
+  return res
+
+def get_all_generic_methods_metadata(alt_path = ''):
+  all_metadata = {}
+
+  filenames = get_all_generic_methods_filenames(alt_path)
+
+  for file in filenames:
+    content = open(file).read()
+    try:
+      metadata = parse_generic_method_metadata(content)
+      all_metadata[metadata['bundle_name']] = metadata
+    except Exception:
+      continue # skip this file, it doesn't have the right tags in - yuk!
+
+  return all_metadata
+
+def get_all_techniques_metadata(alt_path = ''):
+  all_metadata = {}
+
+  if alt_path != '': print "INFO: Alternative source path added: %s" % alt_path
+
+  filenames = get_all_techniques_filenames(alt_path)
+
+  for file in filenames:
+            
+    content = open(file).read()
+    try:
+      metadata = parse_technique_metadata(content)
+      all_metadata[metadata['bundle_name']] = metadata
+
+      promises = parse_technique(file)
+      all_metadata[metadata['bundle_name']]['method_calls'] = parse_technique_methods(promises)
+      all_metadata[metadata['bundle_name']]['variables'] = parse_technique_variables(promises)
+
+    except Exception as e:
+      print "ERROR: Exception triggered, Unable to parse file " + file
+      print e
+      continue # skip this file, it doesn't have the right tags in - yuk!
+
+  return all_metadata
 
 def get_hooks(prefix, action, path):
   """Find all hooks file in directory that use the prefix and sort them"""
@@ -455,6 +520,9 @@ def generate_technique_content(technique_metadata):
   content.append('{')
   content.append('  vars:')
   content.append('    "class_prefix" string => canonify(join("_", "this.callers_promisers"));')
+  if 'variables' in technique:
+    for variable in technique['variables']:
+      content.append('    "' + variable['name'] + '" string => "' + variable['value'] + '";')
   content.append('')
   content.append('  methods:')
 
