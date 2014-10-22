@@ -129,16 +129,19 @@ def write_technique_for_rudder(root_path, technique):
     os.makedirs(path)
   # We don't need to create rudder_reporting.st if all class context are any
   include_rudder_reporting = not all(method_call['class_context'] == 'any' for method_call in technique["method_calls"])
-  write_xml_metadata_file(path,technique,include_rudder_reporting)
+  # We need a caller if the technique bundle has arguments
+  include_rudder_caller = 'bundle_args' in technique
+  write_xml_metadata_file(path,technique,include_rudder_reporting, include_rudder_caller)
   write_expected_reports_file(path,technique)
   if include_rudder_reporting:
     write_rudder_reporting_file(path,technique)
+  if include_rudder_caller:
+    write_rudder_caller_file(path,technique)
 
-
-def write_xml_metadata_file(path, technique, include_rudder_reporting = False):
+def write_xml_metadata_file(path, technique, include_rudder_reporting = False, include_rudder_caller = False):
   """ write metadata.xml file from a technique, to a path """
   file = codecs.open(os.path.realpath(os.path.join(path, "metadata.xml")), "w", encoding="utf-8")
-  content = get_technique_metadata_xml(technique, include_rudder_reporting)
+  content = get_technique_metadata_xml(technique, include_rudder_reporting, include_rudder_caller)
   file.write(content)
   file.close()
 
@@ -158,8 +161,14 @@ def write_rudder_reporting_file(path,technique):
   file.write(content)
   file.close()
 
+def write_rudder_caller_file(path,technique):
+  """ write <technique>_caller.st file from a technique, to a path """
+  file = open(os.path.realpath(os.path.join(path, technique['bundle_name'] + "_caller.st")),"w")
+  content = generate_rudder_caller(technique)
+  file.write(content)
+  file.close()
 
-def get_technique_metadata_xml(technique_metadata, include_rudder_reporting = False):
+def get_technique_metadata_xml(technique_metadata, include_rudder_reporting = False, include_rudder_caller = False):
   """Get metadata xml for a technique as string"""
 
   # Get all generic methods
@@ -169,14 +178,20 @@ def get_technique_metadata_xml(technique_metadata, include_rudder_reporting = Fa
   content.append('<TECHNIQUE name="'+technique_metadata['name']+'">')
   content.append('  <DESCRIPTION>'+technique_metadata['description']+'</DESCRIPTION>')
   content.append('  <BUNDLES>')
-  content.append('    <NAME>'+ technique_metadata['bundle_name'] + '</NAME>')
+  if include_rudder_caller:
+    content.append('    <NAME>'+ technique_metadata['bundle_name'] + '_caller</NAME>')
+  else:
+    content.append('    <NAME>'+ technique_metadata['bundle_name'] + '</NAME>')
   if include_rudder_reporting:
     content.append('    <NAME>'+ technique_metadata['bundle_name'] + '_rudder_reporting</NAME>')
   content.append('  </BUNDLES>')
 
-  if include_rudder_reporting:
+  if include_rudder_reporting or include_rudder_caller:
     content.append('  <TMLS>')
-    content.append('    <TML name="rudder_reporting"/>')
+    if include_rudder_reporting:
+      content.append('    <TML name="rudder_reporting"/>')
+    if include_rudder_caller:
+      content.append('    <TML name="' + technique_metadata['bundle_name'] + '_caller' + '"/>')
     content.append('  </TMLS>')
 
   content.append('  <FILES>')
@@ -348,6 +363,22 @@ def generate_rudder_reporting(technique):
 
   return result
 
+def generate_rudder_caller(technique):
+  """Generate a caller for technique bundles that need arguments"""
+
+  content = []
+  content.append('bundle agent '+ technique['bundle_name']+'_caller')
+  content.append('{')
+  content.append('  methods:')
+
+  arguments = [ '"&' + arg.upper() + '&"' for arg in technique['bundle_args'] ]
+  content.append('      "' + technique['bundle_name'] + '_caller" usebundle => ' + technique['bundle_name'] + '(' + ','.join(arguments)+'");')
+
+  content.append('}')
+
+  # Join all lines with \n to get a pretty CFEngine file
+  result =  '\n'.join(content)+"\n"
+  return result
 
 def usage():
   sys.stderr.write("Can't parse parameters\n")
