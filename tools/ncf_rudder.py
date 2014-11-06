@@ -213,9 +213,11 @@ def get_technique_expected_reports(technique_metadata):
 
     component = generic_method['name']
     key_value = method_call["args"][generic_method["class_parameter_id"]-1]
+    # CFEngine replaced \' and \" by ' or ", sending back the wrong report. We need to escape the \' and \" to fix this
+    corrected_key_value = method_call["args"][generic_method["class_parameter_id"]-1].replace("\\'", "\\\\\\'").replace('\\"', '\\\\\\"')
     class_prefix = generic_method["class_prefix"]+"_"+key_value
 
-    line = technique_name+";;"+class_prefix+";;@@RUDDER_ID@@;;"+component+";;"+key_value
+    line = technique_name+";;"+class_prefix+";;@@RUDDER_ID@@;;"+component+";;"+corrected_key_value
     
     content.append(line)
 
@@ -271,7 +273,7 @@ def generate_rudder_reporting(technique):
     method_name = method_call['method_name']
     generic_method = generic_methods[method_name]
 
-    key_value = method_call["args"][generic_method["class_parameter_id"]-1]
+    key_value = method_call["args"][generic_method["class_parameter_id"]-1].replace("\\'", "\'").replace('\\"', '\"')
     key_value_canonified = re.sub("[^a-zA-Z0-9_]", "_", key_value)
 
     class_prefix = generic_method["class_prefix"]+"_"+key_value_canonified
