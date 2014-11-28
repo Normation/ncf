@@ -30,7 +30,7 @@ bundle agent service_check_stopped_at_boot(service_name)
   vars:
 
     systemctl_utility_present::
-      "command_to_check"   string => "!${paths.path[systemctl]} is-enabled ${service_name}";
+      "command_to_check"   string => "${paths.path[systemctl]} is-enabled ${service_name}; test $? -ne 0";
 
     !systemctl_utility_present.chkconfig_utility_present::
       "command_to_check"   string => "${paths.path[chkconfig]} --list ${service_name} | grep -q 3:off";
