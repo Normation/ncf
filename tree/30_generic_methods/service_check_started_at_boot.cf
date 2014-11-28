@@ -16,7 +16,7 @@
 #
 #####################################################################################
 
-# @name Service check at boot
+# @name Service check started at boot
 # @description Check if a service is set to start at boot using the appropriate method
 #
 # @parameter service_name  Service name (as recognized by systemd, init.d, etc...)
@@ -75,5 +75,5 @@ bundle agent service_check_started_at_boot(service_name)
       "failure" usebundle => _classes_failure("${class_prefix}");
 
     pass2::
-      "reports" usebundle => _logger("Check if service ${service_name} is defined at boot", "${class_prefix}");
+      "reports" usebundle => _logger("Check if service ${service_name} is defined at boot time", "${class_prefix}");
 }
