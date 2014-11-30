@@ -20,14 +20,16 @@
 # This bundle will read the ncf specific configuration and expose it as CFEngine variables
 # Conventions:
 #   The variables will be usable in the context configuration.variablename
-bundle agent configuration
+# @parameter configuration_filename the name of the configuration file. If empty, the default ncf.conf
+# will be used
+bundle agent configuration(configuration_filename)
 {
 
   vars:
-
+    iteration_1::
       "ncf_configuration_basedir" string => dirname("${this.promise_filename}");
 
-      "ncf_configuration_file"    string => "${ncf_configuration_basedir}/../ncf.conf";
+      "ncf_configuration_file"    string => "${ncf_configuration_basedir}/../${configuration_filename}";
 
       # Read all entries from the configuration file
       "num_entries"                  int => readstringarray("ncf_config","${ncf_configuration_file}","#[^\n]*","=",100,8000);
@@ -41,5 +43,11 @@ bundle agent configuration
       "info"                      string => "[INFO] ";
       "debug"                     string => "[DEBUG]";
       "trace"                     string => "[TRACE]";
+
+  defaults:
+      "configuration_filename" string => "ncf.conf", if_match_regex => "";
+
+  classes:
+    "iteration_1" expression => "any";
 
 }
