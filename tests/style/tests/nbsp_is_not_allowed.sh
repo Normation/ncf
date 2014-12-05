@@ -4,7 +4,7 @@ set -e
 
 # NBSP breaks scripts and cfengine code, they should never appear
 
-ALL_TESTS=`find ${NCF_TREE}/.. -type f | grep -v flask`
+ALL_TESTS=`find ${NCF_TREE} ${NCF_TREE}/../tools ${NCF_TREE}/../tests ${NCF_TREE}/../api -type f | grep -v flask | grep -v 'pyc$'` 
 
 ERRORS=0
 for file in ${ALL_TESTS}
