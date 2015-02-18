@@ -71,6 +71,13 @@ app.controller('ncf-builder', function ($scope, $modal, $http, $log, $location, 
   $scope.authenticated = false;
 
   $scope.setPath = function() {
+    // Check url correctness ... and repair wrong %3F inserted
+    var url=$location.url()
+    if (url.indexOf("%3F") > -1) {
+      url = url.replace("%3F","?")
+      $location.url(url)
+    }
+
     var path = $location.search().path;
     if (path === undefined) {
       $scope.path = "";
