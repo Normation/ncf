@@ -137,7 +137,7 @@ def parse_bundlefile_metadata(content, bundle_type):
     for tag in tags[bundle_type]:
       if sys.version_info.major == 2:
         unicodeLine = unicode(line,"UTF-8") #line.decode('unicode-escape')
-      else
+      else:
         unicodeLine = line # = str(line, "UTF-8")
       match = re.match("^\s*#\s*@" + tag + "\s(([a-zA-Z_]+)\s+(.*)|.*)$", unicodeLine, re.UNICODE)
       if match :
