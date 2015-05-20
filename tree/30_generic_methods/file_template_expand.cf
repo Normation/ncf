@@ -20,7 +20,7 @@
 # @description This is a bundle to expand a template in a specific location
 #
 # @parameter tml_file File name (with full path within the framework) of the template file
-# @parameter target_file File name (with full path) where to expand the template
+# @parameter target_file File name (with full path) where to expand the template
 # @parameter mode Mode of destination file
 # @parameter owner Owner of destination file
 # @parameter group Froup of destination file

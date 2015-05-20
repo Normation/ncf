@@ -2,7 +2,7 @@
 #
 # Test adding a package that exists
 # In unsafe because:
-#   - Will install the "htop" package on the machine
+#   - Will install the "htop" package on the machine
 #######################################################
 
 bundle common acc_path
