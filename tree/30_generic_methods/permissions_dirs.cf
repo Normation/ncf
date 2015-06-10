@@ -20,9 +20,9 @@
 # @description Verify if a directory has the right permissions non recursively
 #
 # @parameter path      Path of the directory
-# @parameter mode      Mode to enfore
-# @parameter owner     Owner to enforce
-# @parameter group     Group to enforce
+# @parameter mode      Mode to enfore
+# @parameter owner     Owner to enforce
+# @parameter group     Group to enforce
 # 
 # @class_prefix permissions
 # @class_parameter path

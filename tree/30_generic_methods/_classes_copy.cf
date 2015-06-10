@@ -25,7 +25,7 @@
 # @class_prefix 
 # @class_parameter 
 # This bundle will define a class ${destination_prefix}_{kept,repaired,not_ok,ok,reached}
-# based on ${source_prefix}_{kept,repaired,not_ok,ok,reached}
+# based on ${source_prefix}_{kept,repaired,not_ok,ok,reached}
 
 bundle agent _classes_copy(source_prefix, destination_prefix)
 {

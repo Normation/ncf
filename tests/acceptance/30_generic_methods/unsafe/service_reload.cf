@@ -2,7 +2,7 @@
 #
 # Test reloading a service
 # In unsafe because:
-#   - Will reload the "cron" service on the machine
+#   - Will reload the "cron" service on the machine
 #######################################################
 
 bundle common acc_path

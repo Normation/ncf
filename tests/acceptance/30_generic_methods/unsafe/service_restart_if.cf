@@ -2,7 +2,7 @@
 #
 # Test restarting a service with conditions
 # In unsafe because:
-#   - Will restart the "cron" service on the machine
+#   - Will restart the "cron" service on the machine
 #######################################################
 
 bundle common acc_path

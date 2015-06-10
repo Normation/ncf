@@ -2,7 +2,7 @@
 #
 # Test managing a service (reload ssh)
 # In unsafe because:
-#   - Will reload the "ssh" service on the machine
+#   - Will reload the "ssh" service on the machine
 #######################################################
 
 bundle common acc_path
