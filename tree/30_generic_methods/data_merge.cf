@@ -1,0 +1,42 @@
+#####################################################################################
+# Copyright 2013 Normation SAS
+#####################################################################################
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, Version 3.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#
+#####################################################################################
+
+# @name Merge data containers
+# @description Merges two data containers, the first is the default.
+#
+# @parameter name  Name of the created variable
+# @parameter default_data Default data
+# @parameter user_data User data
+#
+# @class_prefix data_merge
+# @class_parameter name
+# This bundle will define a class data_merge_${name}_{kept,repaired,not_ok,ok,reached}
+
+bundle agent data_merge(name, default_data, user_data)
+{
+  vars:
+      "${name}" data => mergedata("${default_data}", "${user_data}");
+    debug::
+      "debug_result" string  => storejson("${name}");
+      "debug_default" string => storejson("${default_data}");
+      "debug_config" string  => storejson("${user_data}");
+      
+  reports:
+    debug::
+      "${configuration.debug} Merging '${debug_default}' and '${debug_config}' into ${name}:'${debug_result}'";
+}

@@ -1,0 +1,21 @@
+{
+  "servers": [
+    {"address": "0.pool.ntp.org", "options": ""},
+    {"address": "1.pool.ntp.org", "options": ""},
+    {"address": "2.pool.ntp.org", "options": ""},
+    {"address": "3.pool.ntp.org", "options": ""}
+  ],
+  "peers": [
+  ],
+  "broadcasts": [
+  ],
+  "restricts": [
+    {"address": "127.0.0.1", "options": ""},
+    {"address": "::1", "options": ""},
+    {"address": "-4", "options": "default kod notrap nomodify nopeer noquery"},
+    {"address": "-6", "options": "default kod notrap nomodify nopeer noquery"},
+  ],
+  "driftfile": "/var/lib/ntp/ntp.drift",
+  "statsdir": "/var/log/ntpstats/",
+  "enable_statistics": true,
+}

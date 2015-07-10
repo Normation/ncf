@@ -1,0 +1,64 @@
+#####################################################################################
+# Copyright 2013 Normation SAS
+#####################################################################################
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, Version 3.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#
+#####################################################################################
+
+# @name File from a mustache template with data
+# @description Writes a mustache template file from data
+#
+# @parameter source_template  Source template
+# @parameter destination    Destination
+# @parameter template_data  Template data
+#
+# @class_prefix file_from_template_mustache_data
+# @class_parameter destination
+# This bundle will define a class file_from_template_mustache_data_${destination}_{kept,repaired,not_ok,ok,reached}
+
+bundle agent file_from_template_mustache_data(source_template, destination, template_data)
+{
+
+  vars:
+    "class_prefix"        string => canonify("file_from_template_mustache_data_${destination}");
+    
+    debug::
+      "debug_data" string => storejson("${template_data}");
+
+  classes:
+    "template_exists" expression => fileexists("${source_template}");
+
+  files:
+    "${destination}"
+      create          => "true",
+      edit_template   => "${source_template}",
+      template_method => "mustache",
+      template_data   => parsejson(storejson("${template_data}")),
+      ifvarclass      => "template_exists",
+      classes         => classes_generic("${class_prefix}");
+
+  methods:
+
+    !template_exists::
+
+      "template_absent" usebundle => _classes_failure("${class_prefix}");
+
+    any::
+
+      "report"          usebundle => _logger("Build file ${destination} from mustache template ${source_template}", "${class_prefix}");
+
+  reports:
+    debug::
+      "${configuration.debug} JSON data: '${debug_data}'";
+}
