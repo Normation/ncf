@@ -25,7 +25,7 @@
 # @parameter fourth_prefix      The fourth prefix of the source class to combine
 # @parameter destination_prefix The prefix of the destination class
 #
-# @class_prefix 
+# @destination_prefix 
 # @class_parameter destination_prefix
 # This bundle will define a class ${destination_prefix}_{kept,repaired,not_ok,ok,reached}
 # based on ${first_prefix}_{kept,repaired,not_ok,ok,reached} and ${second_prefix}_{kept,repaired,not_ok,ok,reached}
