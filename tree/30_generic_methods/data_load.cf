@@ -1,0 +1,47 @@
+#####################################################################################
+# Copyright 2013 Normation SAS
+#####################################################################################
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, Version 3.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#
+#####################################################################################
+
+# @name Load standard data
+# @description Load default configuration and override with the given file
+#
+# @parameter prefix          Data prefix
+# @parameter configuration   User configuration file
+#
+# @class_prefix data_load
+# @class_parameter configuration
+# This bundle will define a class data_load_${prefix}_{kept,repaired,not_ok,ok,reached}
+
+bundle agent data_load(prefix, configuration)
+{
+  vars:
+      "class_prefix" string => canonify("data_load_${name}");
+
+  methods:
+    "method_call" usebundle => variable_string("${prefix}", "technique_path", "/var/rudder/ncf/local/50_techniques/${prefix}/");
+    "method_call" usebundle => data_read("${prefix}_defaults", "${variable_string.${prefix}_technique_path}/defaults.json");
+    "method_call" usebundle => data_read("${prefix}_user", "${configuration}");
+    "method_call" usebundle => data_merge("${prefix}", "data_read.${prefix}_defaults", "data_read.${prefix}_user");
+
+    "report"
+        usebundle => _logger("Defining standard data for ${prefix}", "${class_prefix}"),
+        ifvarclass => "${class_prefix}_reached";
+
+  reports:
+    debug::
+      "${configuration.debug} Define standard data";
+}

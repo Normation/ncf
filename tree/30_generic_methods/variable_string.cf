@@ -1,0 +1,44 @@
+#####################################################################################
+# Copyright 2013 Normation SAS
+#####################################################################################
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, Version 3.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#
+#####################################################################################
+
+# @name String variable
+# @description Define a string variable
+#
+# @parameter prefix Variable prefix
+# @parameter name   Name of the created variable
+# @parameter value  Value of the variable
+#
+# @class_prefix variable_string
+# @class_parameter name
+# This bundle will define a class variable_string_${prefix}_${name}_{kept,repaired,not_ok,ok,reached}
+
+bundle agent variable_string(prefix, name, value)
+{
+  vars:
+      "class_prefix"      string => canonify("variable_string_${prefix}_${name}");
+      "${prefix}_${name}" string => "${value}";
+
+  methods:
+      "report"
+        usebundle => _logger("Define the string variable ${prefix}_${name}:${value}", "${class_prefix}"),
+        ifvarclass => "${class_prefix}_reached";
+
+  reports:
+    debug::
+      "${configuration.debug} Define string variable '${prefix}'_'${name}':'${value}'";
+}

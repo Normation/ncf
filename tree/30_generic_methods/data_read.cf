@@ -1,0 +1,47 @@
+#####################################################################################
+# Copyright 2013 Normation SAS
+#####################################################################################
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, Version 3.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#
+#####################################################################################
+
+# @name Read configuration
+# @description Read a configuration file into a data variable
+#
+# @parameter name  Name of the created variable
+# @parameter file  Path of the configuration file
+#
+# @class_prefix file
+# @class_parameter file
+# This bundle will define a class data_read_${file}_{kept,repaired,not_ok,ok,reached}
+
+bundle agent data_read(name, file)
+{
+  vars:
+      "class_prefix"     string => canonify("data_read_${file}");
+
+      "${name}" data => readjson("${file}", 10k);
+
+    debug::
+      "debug_result" string => storejson("${name}");
+
+  methods:
+      "report"
+        usebundle => _logger("Read the file ${file} into ${variable_name}", "${class_prefix}"),
+        ifvarclass => "${class_prefix}_reached";
+
+  reports:
+    debug::
+      "${configuration.debug} Read ${file} into ${name}:'${debug_result}'";
+}

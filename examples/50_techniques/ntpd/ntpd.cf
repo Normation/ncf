@@ -1,0 +1,26 @@
+# @name ntpd
+# @description Install, configure and ensure ntpd is running. Uses a template file for configuration.
+# @version 0.1
+
+bundle agent ntpd
+{
+  methods:
+    "method_call" usebundle => data_load("${this.bundle}", "/tmp/user.json"),
+      ifvarclass => concat("any");
+    "method_call" usebundle => variable_string("${this.bundle}", "service_name", "ntpd"),
+      ifvarclass => concat("any.redhat");
+    "method_call" usebundle => variable_string("${this.bundle}", "service_name", "ntp"),
+      ifvarclass => concat("any.debian");
+    "method_call" usebundle => variable_string("${this.bundle}", "configuration_file", "/etc/ntp.conf"),
+      ifvarclass => concat("any");
+    "method_call" usebundle => variable_string("${this.bundle}", "template_file", "ntp.conf.tpl"),
+      ifvarclass => concat("any");
+    "method_call" usebundle => package_install("ntp"),
+      ifvarclass => concat("any");
+    "method_call" usebundle => file_from_template_mustache_data("${variable_string.${this.bundle}_technique_path}/templates/${variable_string.${this.bundle}_template_file}", "${variable_string.${this.bundle}_configuration_file}", "data_merge.${this.bundle}"),
+      ifvarclass => concat("any");
+    "method_call" usebundle => service_restart("${variable_string.${this.bundle}_service_name}"),
+      ifvarclass => concat("file_from_template_mustache_data_${variable_string.ntpd_configuration_file}_repaired");
+    "method_call" usebundle => service_ensure_running("${variable_string.${this.bundle}_service_name}"),
+      ifvarclass => concat("any");
+}
