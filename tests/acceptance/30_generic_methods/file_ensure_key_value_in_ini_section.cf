@@ -1,0 +1,154 @@
+#######################################################
+#
+# Test enforcing key value are present in a section file
+#
+#######################################################
+
+bundle common acc_path
+{
+  vars:
+    "root" string => getenv("NCF_TESTS_ACCEPTANCE", 1024);
+}
+
+body common control
+{
+      inputs => { "${acc_path.root}/default.cf.sub", "${acc_path.root}/default_ncf.cf.sub", "@{ncf_inputs.default_files}" };
+      bundlesequence  => { configuration, default("${this.promise_filename}") };
+      version => "1.0";
+}
+
+#######################################################
+bundle agent init
+{
+  vars:
+    "tmp"             string => getenv("TEMP", 1024);
+    "file_1"            string => "${tmp}/test1.ini";
+    "reference_file_1"  string => "${tmp}/ref1.ini";
+    "file_1_canon"      string => canonify("${file_1}");
+    "file_2"            string => "${tmp}/test2.ini";
+    "reference_file_2"  string => "${tmp}/ref2.ini";
+    "file_2_canon"      string => canonify("${file_2}");
+    "file_3"            string => "${tmp}/test3.ini";
+    "reference_file_3"  string => "${tmp}/ref3.ini";
+    "file_3_canon"      string => canonify("${file_3}");
+
+
+# First test: key is already there, ensure that nothing changes
+    "section_1"         string => "section_test1";
+    "key1"              string => "key1";
+    "value1"            string => "value1";
+    "base_text_up"      string => "[section_test1]
+key1=value1";
+    "base_text_down"    string => "[section_test2]";
+    "reference_1"       string => "${base_text_up}
+${base_text_down}";
+
+# Second test: ensure that if the section does not exist, it will be created
+# with the key value
+    "section_2"         string => "section_test2";
+    "key2"              string => "key2";
+    "value2"            string => "value2";
+    "line_2"            string => "key2=value2";
+    "reference_2"       string => "${base_text_up}
+${base_text_down}
+
+${line_2}";
+
+# third test: key is there, but with wrong value
+    "section_3"         string => "section_test3";
+    "key3"              string => "key3";
+    "value3"            string => "value3";
+    "base_text_3"      string => "[${section_3}]
+${key3}=INVALID";
+    "reference_3"       string => "[${section_3}]
+${key3}=${value3}";
+
+  commands:
+# Initialize first test files
+    "/bin/echo"
+      args    => "\"${reference_1}\" > \"${reference_file_1}\"",
+      contain => in_shell;
+   "/bin/echo"
+      args    => "\"${base_text_up}\" > \"${file_1}\"",
+      contain => in_shell;
+   "/bin/echo"
+      args    => "\"${base_text_down}\" >> \"${file_1}\"",
+      contain => in_shell;
+# Initialize second test files
+    "/bin/echo"
+      args    => "\"${reference_2}\" > \"${reference_file_2}\"",
+      contain => in_shell;
+   "/bin/echo"
+      args    => "\"${base_text_up}\" > \"${file_2}\"",
+      contain => in_shell;
+# Initialize third test file
+    "/bin/echo"
+      args    => "\"${reference_3}\" > \"${reference_file_3}\"",
+      contain => in_shell;
+   "/bin/echo"
+      args    => "\"${base_text_3}\" > \"${file_3}\"",
+      contain => in_shell;
+
+}
+
+#######################################################
+
+bundle agent test
+{
+  methods:
+    "ph1" usebundle => file_ensure_key_value_in_ini_section("${init.file_1}", "${init.section_1}", "${init.key1}", "${init.value1}");
+    "ph2" usebundle => file_ensure_key_value_in_ini_section("${init.file_2}", "${init.section_2}", "${init.key2}", "${init.value2}");
+    "ph3" usebundle => file_ensure_key_value_in_ini_section("${init.file_3}", "${init.section_3}", "${init.key3}", "${init.value3}");
+}
+
+#######################################################
+
+bundle agent check
+{
+  vars:
+    # Commands to check that reference files (expected result) are the same
+    # than the modified files by the generic_method 'file_ensure_line_present_in_ini_section'
+    "line_1_exists_test" string => "/usr/bin/diff \"${init.reference_file_1}\" \"${init.file_1}\"";
+    "line_2_exists_test" string => "/usr/bin/diff \"${init.reference_file_2}\" \"${init.file_2}\"";
+    "line_3_exists_test" string => "/usr/bin/diff \"${init.reference_file_3}\" \"${init.file_3}\"";
+
+  classes:
+    "line_1_exists"
+       expression => returnszero("${line_1_exists_test}", "noshell"),
+       ifvarclass => canonify("file_ensure_key_value_in_ini_section_${init.file_1}_reached");
+    "line_2_exists"
+       expression => returnszero("${line_2_exists_test}", "noshell"),
+       ifvarclass => canonify("file_ensure_key_value_in_ini_section_${init.file_2}_reached");
+    "line_3_exists"
+       expression => returnszero("${line_3_exists_test}", "noshell"),
+       ifvarclass => canonify("file_ensure_key_value_in_ini_section_${init.file_3}_reached");
+
+
+    "ok_test1"    expression => "line_1_exists.file_ensure_key_value_in_ini_section_${init.file_1_canon}_ok.!file_ensure_key_value_in_ini_section_${init.file_1_canon}_error.!file_ensure_key_value_in_ini_section_${init.file_1_canon}_repaired";
+    "ok_test2"    expression => "line_2_exists.file_ensure_key_value_in_ini_section_${init.file_2_canon}_ok.!file_ensure_key_value_in_ini_section_${init.file_2_canon}_error.file_ensure_key_value_in_ini_section_${init.file_2_canon}_repaired";
+    "ok_test3"    expression => "line_3_exists.file_ensure_key_value_in_ini_section_${init.file_3_canon}_ok.!file_ensure_key_value_in_ini_section_${init.file_3_canon}_error.file_ensure_key_value_in_ini_section_${init.file_3_canon}_repaired";
+
+    "ok"          and => {"ok_test1","ok_test2", "ok_test3"};
+
+  reports:
+    ok::
+      "$(this.promise_filename) Pass";
+    !ok::
+      "$(this.promise_filename) FAIL";
+    !line_1_exists::
+      "diff command doesn't return 0 for command: ${line_1_exists_test}";
+    !line_2_exists::
+      "diff command doesn't return 0 for command: ${line_2_exists_test}";
+    !line_3_exists::
+      "diff command doesn't return 0 for command: ${line_3_exists_test}";
+
+    !ok_test1::
+      "error on test1";
+    !ok_test2::
+      "error on test2";
+    !ok_test3::
+      "error on test3";
+
+
+}
+

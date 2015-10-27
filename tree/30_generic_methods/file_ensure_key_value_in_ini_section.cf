@@ -1,0 +1,63 @@
+#####################################################################################
+# Copyright 2015 Normation SAS
+#####################################################################################
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, Version 3.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#
+#####################################################################################
+
+# @name File ensure key = value present in INI section
+# @description Ensure that pair of "key = value" is present in a section in a specific location. The objective of this method is to handle INI-style files. 
+#
+# @parameter file File name to edit
+# @parameter section Name of the INI-style section under which lines should be added (not including the [] brackets)
+# @parameter key The key to manage. If the key is not present in the section, it will be added
+# @parameter value The value for this key.
+#
+# @class_prefix file_ensure_key_value_in_ini_section
+# @class_parameter file
+#
+# This bundle will define a class file_ensure_key_value_in_ini_section_${file}_{kept,repaired,not_ok,ok,reached}
+
+bundle agent file_ensure_key_value_in_ini_section(file, section, key, value)
+{
+  vars:
+      "class_prefix" string => canonify("file_ensure_key_value_in_ini_section_${file}");
+      "section_and_blank_line" string => "[${section}]
+";
+      "key_value[${section}][${key}]" string => "${value}";
+
+  classes:
+      # Check if the section exist: if not, a class will be raised to add it with a blank line.
+      "section_absent"  not => regline("^\[${section}\]$","${file}");
+
+  files:
+      # If the section is not present in the file, firstly it will be added
+      # with a blank line in order to be catched for the lines to add after it.
+      "${file}"
+        create        => "true",
+        edit_line     => ncf_insert_block("${section_and_blank_line}"),
+        edit_defaults => no_backup,
+        ifvarclass    => "section_absent",
+        comment       => "Add section to file with a blank line";
+
+      "${file}"
+        create        => "true",
+        edit_line     => set_variable_values_ini("file_ensure_key_value_in_ini_section.key_value", "${section}"),
+        edit_defaults => no_backup,
+        classes       => classes_generic("${class_prefix}");
+
+  methods:
+      "report"
+        usebundle  => _logger("Ensure line in format key = value into ${file} and INI section ${section}", "${class_prefix}");
+}
