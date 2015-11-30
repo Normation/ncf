@@ -34,7 +34,7 @@ bundle agent init
   files:
     "${file}"
       create => "true",
-      perms  => mog("000", "root", "root");
+      perms  => mog("000", "root", "0");
 
 }
 
@@ -51,9 +51,13 @@ bundle agent test
 bundle agent check
 {
   vars:
-    "permissions_test_mode"  string => "/usr/bin/test $(/usr/bin/stat -c %a ${init.file}) = \"${init.mode}\"";
-    "permissions_test_owner" string => "/usr/bin/test $(/usr/bin/stat -c %U ${init.file}) = \"${init.owner}\"";
-    "permissions_test_group" string => "/usr/bin/test $(/usr/bin/stat -c %G ${init.file}) = \"${init.group}\"";
+    aix::
+      "stat_path" string => "/usr/bin/istat";
+    any::
+      "stat_path" string => "/usr/bin/stat";
+    "permissions_test_mode"  string => "/usr/bin/test $($(stat_path) -c %a ${init.file}) = \"${init.mode}\"";
+    "permissions_test_owner" string => "/usr/bin/test $($(stat_path) -c %U ${init.file}) = \"${init.owner}\"";
+    "permissions_test_group" string => "/usr/bin/test $($(stat_path) -c %G ${init.file}) = \"${init.group}\"";
 
   classes:
     # By default, permissions_type_recursion should create the file if it doesn't exist
