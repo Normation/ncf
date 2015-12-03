@@ -183,20 +183,20 @@ bundle agent schedule_simple_generic(job_id, agent_periodicity,
     any::
       # max_execution_delay in minutes
       "max_execution_delay_real" string => eval("${max_execution_delay_minutes} + 60 * ${max_execution_delay_hours}", "math", "infix");
-      "max_execution_delay" int => "${max_execution_delay_real}";
+      "max_execution_delay" string => "${max_execution_delay_real}";
 
       # periodicity in minutes
       "job_periodicity_real" string => eval("${periodicity_minutes} + 60 * ${periodicity_hours} + 60 * 24 * ${periodicity_days}", "math", "infix");
-      "job_periodicity" int => "${job_periodicity_real}";
+      "job_periodicity" string => "${job_periodicity_real}";
 
       # class persistence in minutes
       "class_persist_real" string => eval("${job_periodicity}-1", "math", "infix");
-      "class_persist" int => "${class_persist_real}";
+      "class_persist" string => "${class_persist_real}";
 
       # compute time between start_* and now
       # (min_of_day - start_minutes) + 60 * (hour of day - start hours) + 60 * 24 * (day of week - start day)%7 
       "minutes_from_start_real" string => eval(strftime("localtime", "%M - ${start_on_minutes} + 60 * (%H - ${start_on_hours}) + 60 * 24 * ((%u - ${start_on_day_of_week} + 7)%%7)", "${ncf_date.timestamp}"), "math", "infix");
-      "minutes_from_start" int => "${minutes_from_start_real}";
+      "minutes_from_start" string => "${minutes_from_start_real}";
 
   classes:
     any::
