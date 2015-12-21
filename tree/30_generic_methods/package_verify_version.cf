@@ -22,9 +22,9 @@
 # @parameter package_name    Name of the package to verify
 # @parameter package_version Version of the package to verify (can be "latest" for latest version)
 #
-# @class_prefix package_install
+# @class_prefix package_verify_version
 # @class_parameter package_name
-# This bundle will define a class package_install_${package_name}_{kept,repaired,not_ok,ok,reached}
+# This bundle will define a class package_verify_version_${package_name}_{kept,repaired,not_ok,ok,reached}
 
 bundle agent package_verify_version(package_name, package_version)
 {
