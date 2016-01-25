@@ -28,9 +28,8 @@ dirs = [ "10_ncf_internals", "20_cfe_basics", "30_generic_methods", "40_it_ops_k
 tags = {}
 tags["common"] = ["bundle_name", "bundle_args"]
 tags["generic_method"] = ["name", "description", "parameter", "class_prefix", "class_parameter", "class_parameter_id", "deprecated"]
-tags["technique"] = ["name", "description", "version"]
+tags["technique"] = ["name", "description", "version", "parameter"]
 optionnal_tags = [ "deprecated" ]
-
 
 multiline_tags = [ "description" ]
 
@@ -206,6 +205,9 @@ def parse_bundlefile_metadata(content, bundle_type):
 
   all_tags = tags[bundle_type] + tags["common"]
   expected_tags = [ tag for tag in all_tags if not tag in optionnal_tags]
+  # technique can have parameters or no parameter
+  if bundle_type == "technique":
+    expected_tags.remove("parameter")
   if not set(res.keys()).issuperset(set(expected_tags)):
     missing_keys = [mkey for mkey in expected_tags if mkey not in set(res.keys())]
     name = res['bundle_name'] if 'bundle_name' in res else "unknown"
@@ -442,8 +444,14 @@ def generate_technique_content(technique_metadata):
     # Add commentary for each new line in the metadata
     metadata_value = technique[metadata_key].replace("\n", "\n# ")
     content.append('# @'+ metadata_key +" "+ metadata_value)
+  if 'parameter' in technique:
+    for parameter in technique['parameter']:
+      content.append('# @parameter ' + parameter['name'] + ' ' + parameter['description'])
   content.append('')
-  content.append('bundle agent '+ technique['bundle_name'])
+  parameters = ''
+  if 'bundle_args' in technique:
+    parameters = '(' + ','.join(technique['bundle_args']) + ')'
+  content.append('bundle agent '+ technique['bundle_name'] + parameters)
   content.append('{')
   content.append('  vars:')
   content.append('    "class_prefix" string => canonify(join("_", "this.callers_promisers"));')
