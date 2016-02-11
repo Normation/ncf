@@ -31,16 +31,18 @@
 bundle agent file_ensure_keys_values(file, keys, separator)
 {
   vars:
-      "class_prefix" string => canonify("file_ensure_keys_values_${file}");
+      "old_class_prefix" string => canonify("file_ensure_keys_values_${file}");
+      "promisers"          slist => { @{this.callers_promisers}, cf_null }, policy => "ifdefined";
+      "class_prefix"      string => canonify(join("_", "promisers"));
+      "args"              slist => { "${file}", "${keys}", "${separator}" };
 
   files:
       "${file}"
         create        => "true",
         edit_line     => maintain_key_values("${keys}", "${separator}"),
         edit_defaults => ncf_empty_select("false"),
-        classes       => classes_generic("${class_prefix}");
+        classes       => classes_generic_two("${old_class_prefix}", "${class_prefix}");
 
   methods:
-      "report"
-        usebundle  => _logger("Ensure lines in format key${separator}values into ${file}", "${class_prefix}");
+      "report" usebundle => _log("Ensure lines in format key${separator}values into ${file}", "${old_class_prefix}", "${class_prefix}", @{args});
 }

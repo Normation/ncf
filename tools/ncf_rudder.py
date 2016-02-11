@@ -179,6 +179,12 @@ def get_technique_metadata_xml(technique_metadata, include_rudder_reporting = Fa
     content.append('    <TML name="rudder_reporting"/>')
     content.append('  </TMLS>')
 
+  content.append('  <FILES>')
+  content.append('    <FILE name="RUDDER_CONFIGURATION_REPOSITORY/ncf/50_techniques/'+technique_metadata['bundle_name']+'/'+technique_metadata['bundle_name']+'.cf">')
+  content.append('      <INCLUDED>true</INCLUDED>')
+  content.append('    </FILE>')
+  content.append('  </FILES>')
+
   content.append('  <SECTIONS>')
 
   method_calls = technique_metadata["method_calls"]  
@@ -273,7 +279,7 @@ def get_technique_expected_reports(technique_metadata):
 
     component = generic_method['name']
     key_value = method_call["args"][generic_method["class_parameter_id"]-1]
-    class_prefix = generic_method["class_prefix"]+"_"+key_value
+    class_prefix = (generic_method["class_prefix"]+"_"+key_value).replace("\\'", "\'").replace('\\"', '\"')
 
     line = technique_name+";;"+class_prefix+";;@@RUDDER_ID@@;;"+component+";;"+key_value
     
@@ -306,12 +312,11 @@ def generate_rudder_reporting(technique):
   filter_calls = [ method_call for method_call in technique["method_calls"] if method_call['class_context'] != "any" ]
 
   for method_call in filter_calls:
-
+     
     method_name = method_call['method_name']
     generic_method = generic_methods[method_name]
 
-    key_value = method_call["args"][generic_method["class_parameter_id"]-1]
-    # this regex allows to canonify everything except variables
+    key_value = method_call["args"][generic_method["class_parameter_id"]-1].replace("\\'", "\'")
     regex = re.compile("[^\$\{\}a-zA-Z0-9_](?![^{}]+})|\$(?!{)")
     # to match cfengine behaviour we need to treat utf8 as if it was ascii (see #7195)
     # string should be unicode string (ie u'') which is the case if they are read from files opened with encoding="utf-8"

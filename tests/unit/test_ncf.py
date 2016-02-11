@@ -30,7 +30,7 @@ class TestNcf(unittest.TestCase):
     self.technique_metadata_test_content = os.path.realpath('technique_metadata_test_content.cf')
     all_tags = ncf.tags["generic_method"]+ncf.tags["common"]
     self.methods_expected_tags = [ tag for tag in all_tags if not tag in ncf.optionnal_tags ]
-    
+
     with open(self.technique_metadata_test_content) as fd:
       self.technique_test_expected_content = fd.read()
 
@@ -93,6 +93,8 @@ class TestNcf(unittest.TestCase):
     self.assertEqual(metadata['class_parameter'], "package_name")
     self.assertEqual(metadata['class_parameter_id'], 1)
     self.assertEqual(metadata['agent_version'], ">= 3.5")
+    self.assertEqual(len(metadata), len(self.methods_expected_tags))
+    self.assertEqual(metadata['agent_version'], ">= 3.5")
 
   ###########################################################
   # Tests to obtain the generic methods that a Technique uses
@@ -105,20 +107,20 @@ class TestNcf(unittest.TestCase):
   def test_parse_technique_generic_method_calls(self):
     """Parsing a technique should return a list of it's generic method calls"""
     bundle_calls = ncf.parse_technique_methods(self.test_technique_file)
-    expected = [  { 'method_name': 'package_install_version', 'args': ['${bla.apache_package_name}', '2.2.11'], 'class_context': 'any' },
-                  { 'method_name': 'service_start', 'args': ['${bla.apache_package_name}'], 'class_context': 'cfengine' },
-                  { 'method_name': 'package_install', 'args': ['openssh-server'], 'class_context': 'cfengine' },
-                  { 'method_name': '_logger', 'args': ['NA', 'NA'], 'class_context': '!cfengine' },
+    expected = [  { 'method_name': u'package_install_version', 'promiser': u'ph1', 'args': [u'${bla.apache_package_name}', u'2.2.11'], 'class_context': u'any' },
+        { 'method_name': u'service_start', 'promiser': u'ph2', 'args': [u'${bla.apache_package_name}'], 'class_context': u'cfengine' },
+        { 'method_name': u'package_install', 'promiser': u'ph3', 'args': [u'openssh-server'], 'class_context': u'cfengine' },
+        { 'method_name': u'_logger', 'promiser': u'ph4', 'args': [u'NA', u'NA'], 'class_context': u'!cfengine' },
                ]
     self.assertEqual(bundle_calls, expected)
 
   def test_parse_technique_generic_method_calls_strings(self):
     """Parsing a technique should return a list of it's generic method calls even if they are string literals"""
     bundle_calls = ncf.parse_technique_methods(self.test_technique_file)
-    expected = [  { 'method_name': 'package_install_version', 'args': ['${bla.apache_package_name}', '2.2.11'], 'class_context': 'any' },
-                  { 'method_name': 'service_start', 'args': ['${bla.apache_package_name}'], 'class_context': 'cfengine' },
-                  { 'method_name': 'package_install', 'args': ['openssh-server'], 'class_context': 'cfengine' },
-                  { 'method_name': '_logger', 'args': ['NA', 'NA'], 'class_context': '!cfengine' },
+    expected = [  { 'method_name': u'package_install_version', 'promiser': u'ph1', 'args': [u'${bla.apache_package_name}', u'2.2.11'], 'class_context': u'any' },
+        { 'method_name': u'service_start', 'promiser': u'ph2', 'args': [u'${bla.apache_package_name}'], 'class_context': u'cfengine' },
+        { 'method_name': u'package_install', 'promiser': u'ph3', 'args': [u'openssh-server'], 'class_context': u'cfengine' },
+        { 'method_name': u'_logger', 'promiser': u'ph4', 'args': [u'NA', u'NA'], 'class_context': u'!cfengine' },
                ]
     self.assertEqual(bundle_calls, expected)
 
@@ -309,8 +311,8 @@ class TestNcf(unittest.TestCase):
   def test_parse_technique_methods_unescape_double_quotes(self):
     test_parse_technique_methods_unescape_double_quotes_calls = ncf.parse_technique_methods(self.technique_metadata_test_content)
     expected_result = [
-                        { 'method_name': 'package_install_version', 'class_context': 'any', 'args': ['apache2', '2.2.11'] },
-                        { 'method_name': 'file_replace_lines', 'class_context': 'redhat', 'args': ['/etc/httpd/conf/httpd.conf', 'ErrorLog "/var/log/httpd/error_log"', 'ErrorLog "/projet/logs/httpd/error_log"'] }
+        { 'method_name': u'package_install_version', 'class_context': u'any', 'promiser': u'method_call', 'args': [u'apache2', u'2.2.11'] },
+        { 'method_name': u'file_replace_lines', 'class_context': u'redhat', 'promiser': u'method_call', 'args': [u'/etc/httpd/conf/httpd.conf', u'ErrorLog "/var/log/httpd/error_log"', u'ErrorLog "/projet/logs/httpd/error_log"'] }
                       ]
     self.assertEqual(expected_result, test_parse_technique_methods_unescape_double_quotes_calls)
 

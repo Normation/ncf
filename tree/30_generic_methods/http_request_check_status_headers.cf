@@ -31,7 +31,10 @@
 bundle agent http_request_check_status_headers(method, url, expected_status, headers)
 {
   vars:
-      "class_prefix" string => canonify("http_request_check_status_headers_${url}");
+      "old_class_prefix" string => canonify("http_request_check_status_headers_${url}");
+      "promisers"          slist => { @{this.callers_promisers}, cf_null }, policy => "ifdefined";
+      "class_prefix"      string => canonify(join("_", "promisers"));
+      "args"              slist => { "${method}", "${url}", "${expected_status}", "${headers}" };
 
   classes:
     any::
@@ -40,19 +43,18 @@ bundle agent http_request_check_status_headers(method, url, expected_status, hea
 
   methods:
     pass2::
-      "report"
-        usebundle  => _logger("Performing a HTTP ${method} request on ${url}, expecting status ${expected_status}", "${class_prefix}");
+      "report" usebundle => _log("Performing a HTTP ${method} request on ${url}, expecting status ${expected_status}", "${old_class_prefix}", "${class_prefix}", @{args});
 
     !_stdlib_path_exists_curl::
+      "force_failure_class_old"   usebundle => _classes_failure("${old_class_prefix}");
       "force_failure_class"       usebundle => _classes_failure("${class_prefix}");
-      "report"                    usebundle => _logger("Unable to perform a HTTP ${method} on ${url}: curl is not installed", "${class_prefix}");
+      "report"                    usebundle => _log("Unable to perform a HTTP ${method} on ${url}: curl is not installed", "${old_class_prefix}", "${class_prefix}", @{args});
 
   commands:
       "${paths.path[curl]}"
         args => "-I -s -o /dev/null -w \"%{http_code}\" ${url} -X ${method} -H '${headers}' | /bin/grep -q ${expected_status}",
         contain => in_shell,
         # We don't define repaired class, as we only query and expect, so using 999 to avoid using this feature
-        classes => classes_generic_return_codes("${class_prefix}", "0", "999", "1");
+        classes => classes_generic_return_single_code_two("${old_class_prefix}", "${class_prefix}", "0", "999", "1");
 
 }
-

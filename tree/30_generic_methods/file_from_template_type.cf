@@ -30,9 +30,11 @@
 
 bundle agent file_from_template_type(source_template, destination, template_type)
 {
-
   vars:
-    "class_prefix"        string => canonify("file_from_template_${destination}");
+    "old_class_prefix" string => canonify("file_from_template_${destination}");
+    "promisers"          slist => { @{this.callers_promisers}, cf_null }, policy => "ifdefined";
+    "class_prefix"      string => canonify(join("_", "promisers"));
+    "args"              slist => { "${source_template}", "${destination}", "${template_type}" };
 
   classes:
     "template_exists" expression => fileexists("${source_template}");
@@ -44,16 +46,16 @@ bundle agent file_from_template_type(source_template, destination, template_type
       template_method => "${template_type}",
       edit_defaults   => ncf_empty_select("false"),
       ifvarclass      => "template_exists",
-      classes         => classes_generic("${class_prefix}");
+      classes         => classes_generic_two("${old_class_prefix}", "${class_prefix}");
 
   methods:
 
     !template_exists::
 
+      "template_absent" usebundle => _classes_failure("${old_class_prefix}");
       "template_absent" usebundle => _classes_failure("${class_prefix}");
 
     any::
-
-      "report"          usebundle => _logger("Build file ${destination} from ${template_type} template ${source_template}", "${class_prefix}");
+      "report"          usebundle => _log("Build file ${destination} from ${template_type} template ${source_template}", "${old_class_prefix}", "${class_prefix}", @{args});
 
 }

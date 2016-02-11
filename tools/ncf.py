@@ -27,10 +27,9 @@ dirs = [ "10_ncf_internals", "20_cfe_basics", "30_generic_methods", "40_it_ops_k
 
 tags = {}
 tags["common"] = ["bundle_name", "bundle_args"]
-tags["generic_method"] = ["name", "description", "documentation", "parameter", "class_prefix", "class_parameter", "class_parameter_id", "agent_version"]
+tags["generic_method"] = ["name", "description", "documentation", "parameter", "class_prefix", "class_parameter", "class_parameter_id", "deprecated", "agent_version"]
 tags["technique"] = ["name", "description", "version"]
-
-optionnal_tags = [ "documentation" ]
+optionnal_tags = [ "deprecated", "documentation" ]
 multiline_tags = [ "description", "documentation" ]
 
 class NcfError(Exception):
@@ -202,7 +201,7 @@ def parse_bundlefile_metadata(content, bundle_type):
   # If we found any parameters, store them in the res object
   if len(parameters) > 0:
     res['parameter'] = parameters
-    
+
   if bundle_type == "generic_method" and not "agent_version" in res:
     res["agent_version"] = ">= 3.5"
 
@@ -335,9 +334,9 @@ def parse_technique_methods(technique_file):
         promise_class_context = class_context_and(class_context, ifvarclass_context)
 
       if args:
-        res.append({'class_context': promise_class_context, 'method_name': method_name, 'args': args})
+        res.append({'class_context': promise_class_context, 'promiser': promiser, 'method_name': method_name, 'args': args})
       else:
-        res.append({'class_context': promise_class_context, 'method_name': method_name})
+        res.append({'class_context': promise_class_context, 'promiser': promiser, 'method_name': method_name})
 
   return res
 
@@ -447,6 +446,9 @@ def generate_technique_content(technique_metadata):
   content.append('')
   content.append('bundle agent '+ technique['bundle_name'])
   content.append('{')
+  content.append('  vars:')
+  content.append('    "class_prefix" string => canonify(join("_", "this.callers_promisers"));')
+  content.append('')
   content.append('  methods:')
 
   # Handle method calls
@@ -460,7 +462,11 @@ def generate_technique_content(technique_metadata):
       arg_value = ""
     class_context = canonify_class_context(method_call['class_context'])
 
-    content.append('    "method_call" usebundle => '+method_call['method_name']+'('+arg_value+'),')
+    if 'promiser' in method_call:
+      promiser = method_call['promiser']
+    else:
+      promiser = "method_call"
+    content.append('    "'+promiser+'" usebundle => '+method_call['method_name']+'('+arg_value+'),')
     content.append('      ifvarclass => concat("'+class_context+'");')
 
   content.append('}')

@@ -25,7 +25,7 @@
 # @class_prefix
 # @class_parameter
 # This bundle will define a class ${destination_prefix}_{kept,repaired,not_ok,ok,reached}
-# based on an inverted ${source_prefix}_{kept,repaired,not_ok,ok,reached}
+# based on an inverted ${source_prefix}_{kept,repaired,not_ok,ok,reached}
 #
 # Conversion tables are:
 #--------------------------------------------------
@@ -110,6 +110,10 @@ bundle agent _classes_copy_invert_kept_repaired(source_prefix, destination_prefi
         classes    => always("${destination_prefix}_${error_suffix}");
 
   classes:
-      "destination_exists" not => strcmp("${destination_prefix}", "");
+      # this line will not be evaluated by cfengine if destination_prefix contains a variable that does not exist
+      # and it will always be evaluated to true otherwise
+      "destination_defined" expression => strcmp("${destination_prefix}", "${destination_prefix}");
+      "destination_not_empty"      not => strcmp("${destination_prefix}", "");
+      "destination_exists"         and => { "destination_defined", "destination_not_empty" };
 
 }

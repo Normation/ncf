@@ -24,28 +24,39 @@
 # 
 # @class_prefix service_restart
 # @class_parameter service_name
+# @deprecated Use a condition with service_restart instead
 # This bundle will define a class service_restart_${canonified_service_name}_{kept,repaired,not_ok,ok,reached}
 
 bundle agent service_restart_if(service_name, trigger_class)
 {
   vars:
 
-    "canonified_service_name"      string     => canonify("${service_name}");
+    "canonified_service_name"      string => canonify("${service_name}");
 
-    "class_prefix"                 string     => "service_restart_${canonified_service_name}";
+    "old_class_prefix"             string => "service_restart_${canonified_service_name}";
+    "promisers"          slist => { @{this.callers_promisers}, cf_null }, policy => "ifdefined";
+    "class_prefix"      string => canonify(join("_", "promisers"));
+    "args"                          slist => { "${service_name}",  "${trigger_class}" };
 
   methods:
 
       # Create kept class
-      "success_class"              usebundle  => _classes_success("${class_prefix}"),
-                                   # parenthesis used to negate all the class
+      "success_class"              usebundle  => _classes_success("${old_class_prefix}"),
+                                   # parenthesis used to negate all the classes
                                    ifvarclass => "!(${trigger_class})";
 
-      "restart"                    usebundle => service_action("${service_name}", "restart"),
+      "success_class"              usebundle  => _classes_success("${class_prefix}"),
+                                   # parenthesis used to negate all the classes
+                                   ifvarclass => "!(${trigger_class})";
+
+      "restart"                    usebundle  => service_action("${service_name}", "restart"),
                                    ifvarclass => "${trigger_class}";
 
-      "class copy"                 usebundle => _classes_copy("service_action_${canonified_service_name}", "${class_prefix}"),
+      "class copy"                 usebundle  => _classes_copy("service_action_${canonified_service_name}", "${old_class_prefix}"),
                                    ifvarclass => "${trigger_class}";
 
-      "report"                     usebundle  => _logger("Restart service ${canonified_service_name}", "service_restart_${canonified_service_name}");
+      "class copy"                 usebundle  => _classes_copy("${class_prefix}_restart", "${class_prefix}"),
+                                   ifvarclass => "${trigger_class}";
+
+      "report"                     usebundle  => _log("Restart service ${canonified_service_name}", "service_restart_${canonified_service_name}", "${class_prefix}", @{args});
 }
