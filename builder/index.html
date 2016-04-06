@@ -298,7 +298,7 @@
                                 {{parameter.description}}
                           </small></h5></label>
                               <br style="clear:both"/>
-                              <textarea msd-elastic name="param" class="form-control" rows="1" ng-required="true" id="param-{{$index}}" ng-model="parameter.value" placeholder=""></textarea>
+                              <textarea msd-elastic name="param" class="form-control" rows="1" ng-required="true" id="param-{{$index}}" ng-model="parameter.value" ng-trim="false" placeholder=""></textarea>
                             </div>
                           </form>
                         </accordion-group>
