@@ -55,7 +55,7 @@ class TestNcfRudder(unittest.TestCase):
     # Testing Techniques with quote
     self.test_technique_with_quote_file = os.path.realpath('test_technique_with_quote.cf')
     self.technique_with_quote_content = open(self.test_technique_with_quote_file).read()
-    self.technique_with_quote_metadata = ncf.parse_technique_metadata(self.technique_with_quote_content)
+    self.technique_with_quote_metadata = ncf.parse_technique_metadata(self.technique_with_quote_content)['result']
     method_with_quote_calls = ncf.parse_technique_methods(self.test_technique_with_quote_file)
     self.technique_with_quote_metadata['method_calls'] = method_with_quote_calls
 
