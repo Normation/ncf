@@ -30,14 +30,19 @@ bundle agent service_stop(service_name)
 
     "canonified_service_name" string => canonify("${service_name}");
 
-    "class_prefix"            string => "service_stop_${canonified_service_name}";
+    "old_class_prefix"        string => "service_stop_${canonified_service_name}";
+    "promisers"          slist => { @{this.callers_promisers}, cf_null }, policy => "ifdefined";
+    "class_prefix"      string => canonify(join("_", "promisers"));
+    "args"                     slist => { "${service_name}" };
 
   methods:
 
     "stop"      usebundle => service_action("${service_name}", "stop");
 
-    "class copy" usebundle => _classes_copy("service_action_${canonified_service_name}", "${class_prefix}");
+    "class copy" usebundle => _classes_copy("service_action_${canonified_service_name}", "${old_class_prefix}");
 
-    "report"     usebundle => _logger("Stop service ${service_name}", "${class_prefix}");
+    "class copy" usebundle => _classes_copy("${class_prefix}_stop", "${class_prefix}");
+
+    "report"     usebundle => _log("Stop service ${service_name}", "${old_class_prefix}", "${class_prefix}", @{args});
 
 }

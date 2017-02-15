@@ -45,10 +45,22 @@ bundle agent schedule_simple_nodups(job_id, agent_periodicity,
                                     periodicity_minutes, periodicity_hours, periodicity_days)
 
 {
+  vars:
+    any::
+      "promisers"          slist => { @{this.callers_promisers}, cf_null }, policy => "ifdefined";
+      "class_prefix"      string => canonify(join("_", "promisers"));
+      "args"               slist => { "${job_id}", "${agent_periodicity}", "${max_execution_delay_minutes}", "${max_execution_delay_hours}",
+                                      "${start_on_minutes}", "${start_on_hours}", "${start_on_day_of_week}",
+                                      "${periodicity_minutes}", "${periodicity_hours}", "${periodicity_days}" };
+
   methods:
     any::
-      "any" usebundle => schedule_simple("${job_id}", "${agent_periodicity}", "${max_execution_delay_minutes}", "${max_execution_delay_hours}", 
-                                         "${start_on_minutes}", "${start_on_hours}", "${start_on_day_of_week}",
-                                         "${periodicity_minutes}", "${periodicity_hours}", "${periodicity_days}", "nodups");
+      "simple scheduler"   usebundle => schedule_simple("${job_id}", "${agent_periodicity}", "${max_execution_delay_minutes}", "${max_execution_delay_hours}", 
+                                                        "${start_on_minutes}", "${start_on_hours}", "${start_on_day_of_week}",
+                                                        "${periodicity_minutes}", "${periodicity_hours}", "${periodicity_days}", "nodups");
+
+      "new result classes" usebundle => _classes_copy("${class_prefix}_simple_scheduler", "${class_prefix}");
+
+      "report"             usebundle => _log("Scheduling ${job_id}", "", "${class_prefix}", @{args});
 }
 

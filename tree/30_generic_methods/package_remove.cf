@@ -18,6 +18,7 @@
 
 # @name Package remove
 # @description Remove a package
+# @deprecated Use [package_absent](#package_absent) instead.
 # @documentation *Example*:
 # ```
 # methods:
@@ -34,14 +35,17 @@ bundle agent package_remove(package_name)
   vars:
 
       "canonified_package_name" string => canonify("${package_name}");
-      "class_prefix"            string => "package_remove_${canonified_package_name}";
+      "old_class_prefix"        string => "package_remove_${canonified_package_name}";
+      "promisers"          slist => { @{this.callers_promisers}, cf_null }, policy => "ifdefined";
+      "class_prefix"      string => canonify(join("_", "promisers"));
+      "args"                     slist => { "${package_name}" };
 
   packages:
       "${package_name}"
                         package_policy  => "delete",
                         package_method  => generic,
-                        classes         => classes_generic("${class_prefix}");
+                        classes         => classes_generic_two("${old_class_prefix}", "${class_prefix}");
 
   methods:
-      "placeholder" usebundle => _logger("Remove package ${package_name}", "${class_prefix}");
+      "placeholder"        usebundle => _log("Remove package ${package_name}", "${old_class_prefix}", "${class_prefix}", @{args});
 }

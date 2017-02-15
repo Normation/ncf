@@ -41,7 +41,10 @@
 bundle agent variable_iterator(variable_prefix, variable_name, value, separator)
 {
   vars:
-      "class_prefix"  string => canonify("variable_iterator_${variable_name}");
+      "old_class_prefix"  string => canonify("variable_iterator_${variable_name}");
+      "promisers"          slist => { @{this.callers_promisers}, cf_null }, policy => "ifdefined";
+      "class_prefix"      string => canonify(join("_", "promisers"));
+      "args"               slist => { "${variable_prefix}", "${variable_name}", "${value}", "${separator}" };
 
       # define the variable within the variable_prefix namespace
       "${variable_prefix}.${variable_name}" slist => string_split("${value}", "${separator}", "10000");
@@ -51,12 +54,14 @@ bundle agent variable_iterator(variable_prefix, variable_name, value, separator)
 
   methods:
     !variable_defined::
+      "error"    usebundle => _classes_failure("${old_class_prefix}");
       "error"    usebundle => _classes_failure("${class_prefix}");
 
     variable_defined::
+      "success"  usebundle => _classes_success("${old_class_prefix}");
       "success"  usebundle => _classes_success("${class_prefix}");
 
     any::
       "report"
-        usebundle  => _logger("Set the iterator ${variable_prefix}.${variable_name} value to ${value}", "${class_prefix}");
+        usebundle  => _log("Set the iterator ${variable_prefix}.${variable_name} value to ${value}", "${old_class_prefix}", "${class_prefix}", @{args});
 }

@@ -48,7 +48,10 @@ bundle agent service_check_started_at_boot(service_name)
       "canonified_service_name" string => canonify("${service_name}");
       "canonified_command"      string => canonify("${command_to_check}");
 
-      "class_prefix"            string => "service_check_started_at_boot_${canonified_service_name}";
+      "old_class_prefix"        string => "service_check_started_at_boot_${canonified_service_name}";
+      "promisers"          slist => { @{this.callers_promisers}, cf_null }, policy => "ifdefined";
+      "class_prefix"      string => canonify(join("_", "promisers"));
+      "args"                     slist => { "${service_name}" };
 
   classes:
 
@@ -68,11 +71,13 @@ bundle agent service_check_started_at_boot(service_name)
   methods:
 
     set_at_boot::
+      "success" usebundle => _classes_success("${old_class_prefix}");
       "success" usebundle => _classes_success("${class_prefix}");
 
     pass2.!set_at_boot::
+      "failure" usebundle => _classes_failure("${old_class_prefix}");
       "failure" usebundle => _classes_failure("${class_prefix}");
 
     pass2::
-      "reports" usebundle => _logger("Check if service ${service_name} is defined at boot", "${class_prefix}");
+      "reports" usebundle => _log("Check if service ${service_name} is defined at boot", "${old_class_prefix}", "${class_prefix}", @{args});
 }

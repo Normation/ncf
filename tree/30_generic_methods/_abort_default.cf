@@ -1,5 +1,5 @@
 #####################################################################################
-# Copyright 2013 Normation SAS
+# Copyright 2013-2016 Normation SAS
 #####################################################################################
 #
 # This program is free software: you can redistribute it and/or modify
@@ -16,19 +16,18 @@
 #
 #####################################################################################
 
-# @name Caller three
-# @description Call a bundle with three arguments
+# @name Abort default
+# @description Standard default agent abort handler
 #
-# @parameter method            The bundle to call
-# @parameter first_argument    The first argument to give
-# @parameter second_argument   The second argument to give
-# @parameter third_argument    The third argument to give
+# @parameter reason  The reason to abort the agent
+# @parameter message The human readable message to display
+#
+# As this ends with an abort, we define no classes
+#
 
-bundle agent _bundle_caller_three(method, first_argument, second_argument, third_argument)
+bundle agent _abort_default(reason, message)
 {
-  methods:
-      "${method}"
-        usebundle => ${method}("${first_argument}", "${second_argument}", "${third_argument}"),
-        comment   => "Call the ${method} bundle with arguments ${first_argument}, {second_argument}, ${third_argument}";
+  reports:
+      "${configuration.fatal} Aborting agent run because of ${reason}: ${message}"
+        action  => immediate;
 }
-

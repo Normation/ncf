@@ -27,11 +27,15 @@
 #
 # @class_prefix file_template_expand
 # @class_parameter target_file
+# @deprecated Use [file_from_template](#file_from_template) instead.
 
 bundle agent file_template_expand(tml_file, target_file, mode, owner, group)
 {
   vars:
-      "class_prefix" string => canonify("file_template_expand_${target_file}");
+      "old_class_prefix" string => canonify("file_template_expand_${target_file}");
+      "promisers"          slist => { @{this.callers_promisers}, cf_null }, policy => "ifdefined";
+      "class_prefix"      string => canonify(join("_", "promisers"));
+      "args"              slist => { "${tml_file}", "${target_file}", "${mode}", "${owner}", "${group}" };
 
   files:
       "${target_file}"
@@ -39,9 +43,10 @@ bundle agent file_template_expand(tml_file, target_file, mode, owner, group)
         edit_template => "${me.framework_path}/${tml_file}",
         edit_defaults => ncf_empty_select("true"),
         perms         => mog("${mode}","${owner}","${group}"),
-        classes       => classes_generic("${class_prefix}");
+        classes       => classes_generic_two("${old_class_prefix}", "${class_prefix}");
 
   methods:
       "sanitize" usebundle => _classes_sanitize("${class_prefix}");
-      "report"   usebundle => _logger("Expand template ${tml_file} into ${target_file} with perms ${mode}, ${owner}, ${group}", "${class_prefix}");
+      "sanitize" usebundle => _classes_sanitize("${old_class_prefix}");
+      "report"   usebundle => _log("Expand template ${tml_file} into ${target_file} with perms ${mode}, ${owner}, ${group}", "${old_class_prefix}", "${class_prefix}", @{args});
 }

@@ -33,18 +33,21 @@
 bundle agent command_execution_result(command, kept_codes, repaired_codes)
 {
   vars:
-      "class_prefix"  string => canonify("command_execution_result_${command}");
+      "old_class_prefix"  string => canonify("command_execution_result_${command}");
+      "promisers"          slist => { @{this.callers_promisers}, cf_null }, policy => "ifdefined";
+      "class_prefix"      string => canonify(join("_", "promisers"));
+      "args"               slist => { "${command}", "${kept_codes}", "${repaired_codes}" };
 
       "kept_list"     slist => splitstring("${kept_codes}", "\s*,\s*", "256");
       "repaired_list" slist => splitstring("${repaired_codes}", "\s*,\s*", "256");
 
   methods:
       "report"
-        usebundle  => _logger("Execute the command ${command}", "${class_prefix}"),
-        ifvarclass => "${class_prefix}_reached";
+        usebundle  => _log("Execute the command ${command}", "${old_class_prefix}", "${class_prefix}", @{args}),
+        ifvarclass => "(!has_promiser_stack.${old_class_prefix}_reached)|(has_promiser_stack.${class_prefix}_reached)";
 
   commands:
       "${command}"
         contain      => in_shell,
-        classes      => classes_generic_return_code_list("${class_prefix}", @{kept_list}, @{repaired_list});
+        classes      => classes_generic_return_code_list_two("${old_class_prefix}", "${class_prefix}", @{kept_list}, @{repaired_list});
 }

@@ -18,6 +18,9 @@
 
 # @name Class copy and invert kept and repaired
 # @description Copy class prefix to another one and invert kept and repaired, to switch the context from a bundle to another
+#
+# @parameter source_prefix      The prefix of the source class to copy
+# @parameter destination_prefix The prefix of the destination class to copy
 # @documentation This bundle will define a class ${destination_prefix}_{kept,repaired,not_ok,ok,reached}
 # based on an inverted ${source_prefix}_{kept,repaired,not_ok,ok,reached}
 #
@@ -46,9 +49,6 @@
 # class_timeout        <==> class_timeout
 # class_reached        <==> class_reached
 #--------------------------------------------------
-#
-# @parameter source_prefix      The prefix of the source class to copy
-# @parameter destination_prefix The prefix of the destination class to copy
 #
 # @class_prefix
 # @class_parameter
@@ -110,6 +110,10 @@ bundle agent _classes_copy_invert_kept_repaired(source_prefix, destination_prefi
         classes    => always("${destination_prefix}_${error_suffix}");
 
   classes:
-      "destination_exists" not => strcmp("${destination_prefix}", "");
+      # this line will not be evaluated by cfengine if destination_prefix contains a variable that does not exist
+      # and it will always be evaluated to true otherwise
+      "destination_defined" expression => strcmp("${destination_prefix}", "${destination_prefix}");
+      "destination_not_empty"      not => strcmp("${destination_prefix}", "");
+      "destination_exists"         and => { "destination_defined", "destination_not_empty" };
 
 }

@@ -636,7 +636,7 @@ $scope.groupMethodsByCategory = function () {
 
   $scope.methodUrl = function(method,kind) {
     if (usingRudder) {
-      return "/rudder-doc/#"+method.bundle_name
+      return "/rudder-doc/"+kind+".html#"+method.bundle_name
     } else {
       return "http://www.ncf.io/pages/reference.html#"+method.bundle_name
     }
@@ -697,13 +697,12 @@ $scope.groupMethodsByCategory = function () {
 
   // Get the class value generated from a class prefix and a class kind (kept,repaired,error, ...)
   $scope.getClassKind= function(method_call,kind) {
-    // do not canonify what is between ${ }
-    var param = $scope.getClassParameter(method_call)
     var param = $scope.getClassParameter(method_call)
     if (param === undefined) {
       param=""
     }
-    param = param.replace(/[^\${}\w](?![^{}]+})|\$(?!{)/g,"_");
+    // do not canonify what is between ${ }
+    param = param.replace(/\\'/g, "'").replace(/\\"/g, '"').replace(/[^\${}\w](?![^{}]+})|\$(?!{)/g,"_");
     return  $scope.getClassPrefix(method_call)+"_"+param +"_"+kind
   }
 

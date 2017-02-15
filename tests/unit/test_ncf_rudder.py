@@ -51,6 +51,20 @@ class TestNcfRudder(unittest.TestCase):
     with open(self.test_metadata_xml_file) as fd:
       self.test_metadata_xml_content = fd.read()
 
+
+    # Testing Techniques with quote
+    self.test_technique_with_quote_file = os.path.realpath('test_technique_with_quote.cf')
+    self.technique_with_quote_content = open(self.test_technique_with_quote_file).read()
+    self.technique_with_quote_metadata = ncf.parse_technique_metadata(self.technique_with_quote_content)['result']
+    method_with_quote_calls = ncf.parse_technique_methods(self.test_technique_with_quote_file)
+    self.technique_with_quote_metadata['method_calls'] = method_with_quote_calls
+
+    self.test_expected_reports_with_quote_csv_file = os.path.realpath('test_expected_reports_with_quote.csv')
+    self.test_expected_reports_with_quote_csv_content = open(self.test_expected_reports_with_quote_csv_file).read()
+
+    self.test_metadata_with_quote_xml_file = os.path.realpath('test_metadata_with_quote.xml')
+    self.test_metadata_with_quote_xml_content = open(self.test_metadata_with_quote_xml_file).read()
+
   def test_expected_reports_from_technique(self):
     expected_reports_string = ncf_rudder.get_technique_expected_reports(self.technique_metadata)
     self.assertEqual(expected_reports_string, self.test_expected_reports_csv_content)
@@ -78,24 +92,40 @@ class TestNcfRudder(unittest.TestCase):
     result = not os.path.exists(os.path.realpath(os.path.join(root_path, 'bla', '0.1', "rudder_reporting.st")))
     self.assertTrue(result)
 
+
+  # Testing Techniques with quotes
+  def test_expected_reports_with_quote(self):
+    expected_reports_string = ncf_rudder.get_technique_expected_reports(self.technique_with_quote_metadata)
+    self.assertEquals(expected_reports_string, self.test_expected_reports_with_quote_csv_content)
+
+  def test_metadate_with_quote(self):
+    metadata_xml_string = ncf_rudder.get_technique_metadata_xml(self.technique_with_quote_metadata)
+    expected_metadata_pure_xml = self.test_metadata_with_quote_xml_content
+    self.assertEquals(expected_metadata_pure_xml, metadata_xml_string)
+
   def test_rudder_reporting_content(self):
 
     expected_result = []
     expected_result.append('bundle agent bla_rudder_reporting')
     expected_result.append('{')
+    expected_result.append('  vars:')
+    expected_result.append('    "promisers"          slist => { @{this.callers_promisers}, cf_null }, policy => "ifdefined";')
+    expected_result.append('    "class_prefix"      string => canonify(join("_", "promisers"));')
+    expected_result.append('    "args"               slist => { };')
+    expected_result.append('')
     expected_result.append('  methods:')
     expected_result.append('')
     expected_result.append('    !(debian)::')
     expected_result.append('      "dummy_report" usebundle => _classes_noop("service_start_apache2");')
-    expected_result.append('      "dummy_report" usebundle => logger_rudder("Service start apache2 if debian", "service_start_apache2");')
+    expected_result.append('      "dummy_report" usebundle => log_rudder("Service start apache2 if debian", "service_start_apache2", "${class_prefix}", @{args});')
     expected_result.append('')
     expected_result.append('    !(service_start_apache2_repaired)::')
     expected_result.append('      "dummy_report" usebundle => _classes_noop("package_install_openssh_server");')
-    expected_result.append('      "dummy_report" usebundle => logger_rudder("Package install openssh-server if service_start_apache2_repaired", "package_install_openssh_server");')
+    expected_result.append('      "dummy_report" usebundle => log_rudder("Package install openssh-server if service_start_apache2_repaired", "package_install_openssh_server", "${class_prefix}", @{args});')
     expected_result.append('')
     expected_result.append('    !(!service_start_apache2_repaired.debian)::')
     expected_result.append('      "dummy_report" usebundle => _classes_noop("command_execution__bin_date");')
-    expected_result.append('      "dummy_report" usebundle => logger_rudder("Command execution /bin/date if !service_start_apache2_repaired.debian", "command_execution__bin_date");')
+    expected_result.append('      "dummy_report" usebundle => log_rudder("Command execution /bin/date if !service_start_apache2_repaired.debian", "command_execution__bin_date", "${class_prefix}", @{args});')
     expected_result.append('}')
 
     # Join all lines with \n
@@ -132,11 +162,16 @@ class TestNcfRudder(unittest.TestCase):
     expected_result = []
     expected_result.append('bundle agent Test_technique_with_variable_rudder_reporting')
     expected_result.append('{')
+    expected_result.append('  vars:')
+    expected_result.append('    "promisers"          slist => { @{this.callers_promisers}, cf_null }, policy => "ifdefined";')
+    expected_result.append('    "class_prefix"      string => canonify(join("_", "promisers"));')
+    expected_result.append('    "args"               slist => { };')
+    expected_result.append('')
     expected_result.append('  methods:')
     expected_result.append('')
     expected_result.append('      "dummy_report" usebundle => _classes_noop("file_create_${sys.workdir}_module_env"),')
     expected_result.append('                    ifvarclass => concat("!(directory_create_",canonify("${sys.workdir}"),"_module_repaired)");')
-    expected_result.append('      "dummy_report" usebundle => logger_rudder("File create ${sys.workdir}/module/env if directory_create_${sys.workdir}_module_repaired", "file_create_${sys.workdir}_module_env"),')
+    expected_result.append('      "dummy_report" usebundle => log_rudder("File create ${sys.workdir}/module/env if directory_create_${sys.workdir}_module_repaired", "file_create_${sys.workdir}_module_env", "${class_prefix}", @{args}),')
     expected_result.append('                    ifvarclass => concat("!(directory_create_",canonify("${sys.workdir}"),"_module_repaired)");')
     expected_result.append('}')
 
