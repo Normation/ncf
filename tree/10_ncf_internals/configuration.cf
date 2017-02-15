@@ -79,6 +79,18 @@ bundle agent configuration
       "pass2" expression => "pass1";
       "pass1" expression => "any";
 
+      # Make log level incremental
+      "debug"        expression => "trace",
+                          scope => "namespace";
+      # CFEngine's stdlib verbose mode
+      "verbose_mode" expression => "debug",
+                          scope => "namespace";
+      "info"         expression => "debug",
+                          scope => "namespace";
+      # CFEngine's stdlib inform mode
+      "inform_mode"  expression => "info" ,
+                          scope => "namespace";
+
     pass3::
       # this line will not be evaluated by cfengine if destination_prefix contains a variable that does not exist
       # and it will always be evaluated to true otherwise
@@ -88,6 +100,7 @@ bundle agent configuration
       "enabled_abort_handlers_defined" expression => strcmp("${enabled_abort_handlers}", "${enabled_abort_handlers}");
       "enabled_abort_handlers_empty"   expression => strcmp("${ncf_config[abort_handlers][1]}", "");
       "cfengine_port_defined"                 not => strcmp("${cfengine_port}", "${ncf_config[cfengine_port][1]}");
+
 
   # We cannot use the generic method to expand template, as it relies on the logger,
   # which is not yet defined
