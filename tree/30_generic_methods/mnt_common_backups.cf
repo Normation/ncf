@@ -1,0 +1,45 @@
+#####################################################################################
+# Copyright 2014 Martin Simons Webhuis
+#####################################################################################
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, Version 3.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#
+#####################################################################################
+
+# Set of parameters for building the array_mounts for mount_nfs_array
+#
+# "nfs_host"       string => "bur.webhuis.nl";
+# "nfs_backup"     string => "/bur-san";
+# "san_host"       string => "san.webhuis.nl";
+# "san_export"     string => "/volume1/exports";
+#
+# "class_domain"   string => "webhuis_nl";
+# "nfs_ro"         string => "ro,hard,intr,noatime,nodiratime 0 0";
+# "nfs_rw"         string => "rw,hard,intr,noatime,nodiratime 0 0";
+
+bundle agent mnt_common_backups {
+vars:
+
+      "nfs_volume[/mnt/export][nfs_host]"        string => "${${g.class_domain}.san_host}";
+      "nfs_volume[/mnt/export][nfs_device]"      string => "${${g.class_domain}.san_export}";
+      "nfs_volume[/mnt/export][nfs_permissions]" string => "${g.nfs_rw}";
+#  !backup_recovery::
+      "nfs_volume[/mnt/backup][nfs_host]"        string => "${${g.class_domain}.nfs_host}";
+      "nfs_volume[/mnt/backup][nfs_device]"      string => "${${g.class_domain}.nfs_backup}/${sys.domain}/${sys.fqhost}";
+      "nfs_volume[/mnt/backup][nfs_permissions]" string => "${g.nfs_rw}";
+
+methods:
+
+  "any" usebundle => mount_nfs_array("mnt_common_backups.nfs_volume");
+}
+

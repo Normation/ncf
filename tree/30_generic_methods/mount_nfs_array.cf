@@ -1,0 +1,44 @@
+#####################################################################################
+# Copyright 2014 Martin Simons Webhuis, Ted Zlatanov
+#####################################################################################
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, Version 3.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#
+#####################################################################################
+
+# @array_mounts
+#
+# "nfs_volume[mointpoint][nfs_host]"        string
+# "nfs_volume[mountpoint][nfs_device]"      string
+# "nfs_volume[mountpoint][nfs_permissions]" string
+#
+# This bundle will mount all the nfs volumes that are being passed to it as an array
+# Please find the example of calling this bundle in mnt_common_backups
+
+bundle agent mount_nfs_array(array_mounts) {
+
+vars:
+  "mounts_index"                         slist => getindices(${array_mounts});
+
+methods:
+ "any"  usebundle => mount_nfs("${mounts_index}", "$($(array_mounts)[$(mounts_index)][nfs_host])", "$($(array_mounts)[$(mounts_index)][nfs_device])", "$($(array_mounts)[$(mounts_index)][nfs_permissions])");
+
+}
+
+bundle agent mount_nfs(mount, nfs_host, nfs_device, nfs_permissions) {
+
+storage:
+  "${mount}"   mount  => nfs_p($(nfs_host), $(nfs_device),$(nfs_permissions));
+
+}
+
