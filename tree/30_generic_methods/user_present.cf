@@ -1,0 +1,65 @@
+#####################################################################################
+# Copyright 2017 Normation SAS
+#####################################################################################
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, Version 3.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#
+#####################################################################################
+
+# @name User present
+# @description Ensure a user exists on the system
+# @documentation This method does not create the user's home directory.
+#
+# @parameter login User login
+# 
+# @class_prefix user_present
+# @class_parameter login
+
+bundle agent user_present(login)
+{
+  vars:
+    "old_class_prefix"  string => canonify("user_present_${login}");
+    "promisers"          slist => { @{this.callers_promisers}, cf_null }, policy => "ifdefined";
+    "class_prefix"      string => canonify(join("_", "promisers"));
+    "args"               slist => { "${login}" };
+
+  classes:
+    any::
+      "pass3" expression => "pass3";
+      "pass2" expression => "pass1";
+      "pass1" expression => "any";
+    
+    "group_exists_${login}" expression => groupexists("${login}");
+    "args_defined"                 not => "group_exists_${login}";
+       
+
+  users:
+    args_defined::
+    "${login}"  policy     => "present",
+                classes    => classes_generic_two("${old_class_prefix}", "${class_prefix}");
+
+  methods:
+    !args_defined::
+      "error" usebundle => _classes_failure("${old_class_prefix}");
+      "error" usebundle => _classes_failure("${class_prefix}");
+
+      "report"
+        usebundle => _log("Default group ${login} already exists. User ${login} present", "${old_class_prefix}", "${class_prefix}", @{args}),
+          ifvarclass => "((!has_promiser_stack.${old_class_prefix}_reached)|(has_promiser_stack.${class_prefix}_reached)).group_exists_${login}";
+
+    args_defined::
+      "report"
+        usebundle => _log("User ${login} present", "${old_class_prefix}", "${class_prefix}", @{args}),
+          ifvarclass => "((!has_promiser_stack.${old_class_prefix}_reached)|(has_promiser_stack.${class_prefix}_reached)).!group_exists_${login}";
+}
+
