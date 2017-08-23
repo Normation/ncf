@@ -164,6 +164,12 @@ return {
 }
 });
 
+app.directive('popover', function() {
+  return function(scope, elem) {
+    $(elem).popover();
+  }
+});
+
 // Declare controller ncf-builder
 app.controller('ncf-builder', function ($scope, $modal, $http, $log, $location, $anchorScroll, ngToast, $timeout, focus) {
   initScroll();
@@ -189,6 +195,12 @@ app.controller('ncf-builder', function ($scope, $modal, $http, $log, $location, 
   $scope.authenticated = false;
   // Open/Close by default the Conditions box
   $scope.conditionIsOpen = false;
+
+  //Generic methods filters
+  $scope.filter = {
+    compatibility  : "all"
+  , showDeprecated : false
+  }
 
   var usingRudder = false;
 
@@ -268,7 +280,8 @@ $scope.handle_error = function( actionName ) {
           errorNotification('Error '+ actionName)
       }
     }
-  } };
+  }
+};
 
 function defineMethodClassContext (method_call) {
   // First split from .
@@ -310,7 +323,6 @@ function toTechUI (technique) {
   }
   return technique;
 };
-
 // Transform a ui technique into a valid ncf technique by removint original_index param
 function toTechNcf (baseTechnique) {
   var technique = angular.copy(baseTechnique);
@@ -349,9 +361,16 @@ $scope.getSessionStorage = function(){
       //Not a new technique
       var existingTechnique = $scope.techniques.find(function(technique){return technique.bundle_name === t2.bundle_name })
       if (existingTechnique !== undefined) {
-        //$scope.originalTechnique = angular.copy(existingTechnique);
         if(t2.hasOwnProperty('saving'))existingTechnique.saving   = false;
         if(t2.hasOwnProperty('isClone'))existingTechnique.isClone = false;
+        for(var i=0; i<t2.method_calls.length; i++){
+          if(t2.method_calls[i].hasOwnProperty('dsc_support')){
+            existingTechnique.method_calls[i].dsc_support=t2.method_calls[i].dsc_support;
+          }
+          if(existingTechnique.method_calls[i].hasOwnProperty('promiser')){
+            t2.method_calls[i].promiser = existingTechnique.method_calls[i].promiser;
+          }
+        }
         if(!angular.equals(t2, existingTechnique)){
           $scope.conflictFlag = true;
           var modalInstance = $modal.open({
@@ -474,17 +493,17 @@ $scope.getMethodsAndTechniques = function () {
 $scope.groupMethodsByCategory = function () {
   var groupedMethods = {};
   for (var methodKey in $scope.generic_methods) {
-      var method = $scope.generic_methods[methodKey];
-      var name = methodKey.split('_')[0];
-      var grouped = groupedMethods[name];
-      if (grouped === undefined) {
-          groupedMethods[name] = [method];
-      } else {
-        groupedMethods[name].push(method);
-      }
-    };
-    return groupedMethods;      
+    var method = $scope.generic_methods[methodKey];
+    var name = methodKey.split('_')[0];
+    var grouped = groupedMethods[name];
+    if (grouped === undefined) {
+      groupedMethods[name] = [method];
+    } else {
+      groupedMethods[name].push(method);
+    }
   };
+  return groupedMethods;
+};
 
   // Method used to check if we can select a technique without losing changes
   $scope.checkSelect = function(technique, select) {
@@ -566,7 +585,63 @@ $scope.groupMethodsByCategory = function () {
   $scope.checkMinorVersion= function( ) {
       return checkVersion($scope.minor_OS);
   }
+  $scope.checkDeprecatedFilter = function(methods){
+    return methods.some(function(method){return method.deprecated === undefined });
+  }
+  $scope.checkFilterCategory = function(methods){
+    var deprecatedFilter = $scope.filter.showDeprecated || $scope.checkDeprecatedFilter(methods);
+    var agentTypeFilter  = false;
+    switch($scope.filter.compatibility){
+      case "dsc":
+        for(var i=0 ; i<methods.length ; i++){
+          if(methods[i].dsc_support){
+            agentTypeFilter  = true;
+            break;
+          }
+        }
+        break;
 
+      case "classic":
+        for(var i=0 ; i<methods.length ; i++){
+          if(!methods[i].dsc_support){
+            agentTypeFilter  = true;
+            break;
+          }
+        }
+        break;
+
+      case "all":
+        agentTypeFilter  = true;
+        break;
+    }
+    return agentTypeFilter && deprecatedFilter;
+  }
+  $scope.checkFilterMethod = function(method){
+    switch($scope.filter.compatibility){
+      case "dsc":
+        return method.dsc_support;
+
+      case "classic":
+        return !method.dsc_support;
+
+      case "all":
+        return true;
+    }
+    return false;
+  }
+
+  $scope.getIconClassByAgentType = function(methodName){
+    /* Icon classes :
+        - DSC     : 'dsc-icon'
+        - Classic : 'glyphicon glyphicon-cog classic-icon'
+    */
+    for(var method in $scope.generic_methods){
+      if(($scope.generic_methods[method].bundle_name == methodName)&&($scope.generic_methods[method].dsc_support)){
+        return 'dsc-icon';
+      }
+    }
+    return 'glyphicon glyphicon-cog classic-icon';
+  }
   // Function used when changing os type
   $scope.updateOSType = function() {
     // Reset selected OS
@@ -631,13 +706,15 @@ $scope.groupMethodsByCategory = function () {
   function toMethodCall(bundle) {
     var original_index = undefined;
     var call = {
-        "method_name" : bundle.bundle_name
+        "method_name"    : bundle.bundle_name
       , "original_index" : original_index
-      , "class_context" : "any"
-      , "parameters": bundle.parameter.map(function(v,i) {
-        v["value"] = undefined 
+      , "class_context"  : "any"
+      , "dsc_support"    : bundle.dsc_support ? true : false
+      , "parameters"     : bundle.parameter.map(function(v,i) {
+        v["value"] = undefined
         return  v;
       })
+      , 'deprecated'     : bundle.deprecated
     }
     defineMethodClassContext(call)
     return angular.copy(call)
@@ -821,6 +898,18 @@ $scope.groupMethodsByCategory = function () {
   $scope.removeMethod= function(index) {
     $scope.selectedMethod = undefined;
     $scope.selectedTechnique.method_calls.splice(index, 1);
+  }
+
+  // Check if a method is deprecated
+  $scope.isDeprecated = function(methodName) {
+    return $scope.generic_methods[methodName].deprecated;
+  };
+
+  $scope.hasDeprecatedMethod = function(t){
+    for(var i=0; i<t.method_calls.length; i++){
+      if($scope.isDeprecated(t.method_calls[i].method_name))return true
+    }
+    return false;
   }
 
   // Move a method from an index to another index, and switch those
@@ -1039,10 +1128,23 @@ $scope.groupMethodsByCategory = function () {
     return result;
   }
 
+  $scope.isUsed = function(method){
+    var i,j = 0;
+    if(method.deprecated){
+      for(i=0; i<$scope.techniques.length; i++){
+        while(j<$scope.techniques[i].method_calls.length){
+          if($scope.techniques[i].method_calls[j].method_name == method.bundle_name){
+            return true;
+          }
+          j++;
+        }
+      }
+    }
+  return false;
+  };
   $scope.reloadData();
   $scope.setPath();
 });
-
 var confirmModalCtrl = function ($scope, $modalInstance, actionName, kind, name) {
 
   $scope.actionName = actionName;
