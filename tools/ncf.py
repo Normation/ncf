@@ -31,12 +31,12 @@ dirs = [ "10_ncf_internals", "20_cfe_basics", "30_generic_methods", "40_it_ops_k
 tags = {}
 common_tags            = [ "name", "description", "parameter", "bundle_name", "bundle_args"]
 tags["generic_method"] = [ "documentation", "class_prefix", "class_parameter", "class_parameter_id", "deprecated", "agent_version", "agent_requirements", "parameter_constraint", "action", "rename" ]
-tags["technique"]      = [ "version" ]
+tags["technique"]      = [ "version", "method_call" ]
 [ value.extend(common_tags) for (k,value) in tags.items() ]
 
 optionnal_tags = {}
 optionnal_tags["generic_method"] = [ "deprecated", "documentation", "parameter_constraint", "agent_requirements", "action", "rename" ]
-optionnal_tags["technique"]      = [ "parameter" ]
+optionnal_tags["technique"]      = [ "parameter" , "method_call"]
 multiline_tags                   = [ "description", "documentation", "deprecated" ]
 
 class NcfError(Exception):
@@ -152,6 +152,7 @@ def parse_bundlefile_metadata(content, bundle_type):
   res = {}
   warnings = []
   parameters = []
+  method_calls = []
   param_names = set() 
   param_constraints = {} 
   multiline = False
@@ -180,6 +181,10 @@ def parse_bundlefile_metadata(content, bundle_type):
           constraint = json.loads("{" + match.group(4)+ "}")
           # extend default_constraint if it was not already defined)
           param_constraints.setdefault(match.group(3), ncf_constraints.default_constraint.copy()).update(constraint)
+        if tag == "method_call":
+          method_call = json.loads(match.group(2))
+          method_calls.append(method_call)
+
         else:
           res[tag] = match.group(2)
         previous_tag = tag
@@ -245,6 +250,8 @@ def parse_bundlefile_metadata(content, bundle_type):
       param["constraints"] = constraints
     
   res['parameter'] = parameters
+  if "method_call" in tags[bundle_type]:
+    res['method_calls'] = method_calls
 
   if bundle_type == "generic_method" and not "agent_version" in res:
     res["agent_version"] = ">= 3.6"
@@ -538,6 +545,9 @@ def generate_technique_content(technique, methods):
       parameter["id"] = str(uuid.uuid4())
     content.append('# @parameter '+ json.dumps(parameter))
 
+  for method_call in technique['method_calls']:
+    content.append('# @method_call '+ json.dumps(method_call))
+
   content.append('')
   content.append('bundle agent '+ technique['bundle_name']+bundle_param)
   content.append('{')
@@ -596,7 +606,7 @@ def generate_technique_content(technique, methods):
 # FUNCTIONS called directly by the API code
 ###########################################
 
-def get_all_techniques_metadata(include_methods_calls = True, alt_path = ''):
+def get_all_techniques_metadata(include_methods_calls = False, alt_path = ''):
   all_metadata = {}
 
   if alt_path != '': sys.stderr.write("INFO: Alternative source path added: %s\n" % alt_path)
@@ -660,7 +670,7 @@ def get_all_generic_methods_metadata(alt_path = ''):
   return { "data": { "generic_methods" : all_metadata }, "errors": format_errors(errors), "warnings": warnings }
 
 
-def write_technique(technique_metadata, alt_path = ""):
+def write_technique(technique_metadata, alt_path = "", run_hooks = True):
   """Write technique directory from technique_metadata inside the target path"""
   if alt_path == "":
     path = os.path.join(get_root_dir(),"tree")

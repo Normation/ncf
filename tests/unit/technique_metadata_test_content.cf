@@ -1,6 +1,8 @@
 # @name ncf technique method argument escape test
 # @description This is a bundle to test ncf's Python lib
 # @version 0.1
+# @method_call {"method_name": "package_install_version", "class_context": "any", "args": ["apache2", "2.2.11"]}
+# @method_call {"method_name": "file_replace_lines", "class_context": "redhat", "args": ["/etc/httpd/conf/httpd.conf", "ErrorLog \"/var/log/httpd/error_log\"", "ErrorLog \"/projet/logs/httpd/error_log\""]}
 
 bundle agent content_escaping_test
 {

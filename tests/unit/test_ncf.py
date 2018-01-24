@@ -64,7 +64,10 @@ class TestNcf(unittest.TestCase):
   def test_parse_technique(self):
     """Parsing should return a dict with all defined technique tags"""
     metadata = ncf.parse_technique_metadata(self.technique_content)['result']
-    self.assertEqual(sorted(metadata.keys()), sorted(ncf.tags["technique"]))
+    metadata_keys = [ key for key in metadata.keys() if key != "method_calls" ]
+    metadata_keys.append("method_call")
+
+    self.assertEqual(sorted(metadata_keys), sorted(ncf.tags["technique"]))
 
   def test_parse_technique_data(self):
     """Parsing should return a dict with the data from the test technique"""
