@@ -10,6 +10,11 @@
 # @description This meta-Technique is a sample only, allowing for testing.
 # @version 0.1
 #
+# @method_call {"method_name": "package_install_version", "class_context": "any", "args": ["${bla.apache_package_name}", "2.2.11"]}
+# @method_call {"method_name": "service_start", "class_context": "cfengine", "args": ["${bla.apache_package_name}"]}
+# @method_call {"method_name": "package_install", "class_context": "cfengine", "args": ["openssh-server"]}
+# @method_call {"method_name": "command_execution", "class_context": "cfengine", "args": ["/bin/echo \"test\""]}
+#
 # Please see the online documentation for more details.
 bundle agent bla {
   vars:

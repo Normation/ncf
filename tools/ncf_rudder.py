@@ -249,6 +249,11 @@ def generate_rudder_reporting(technique):
 
   return result
 
+def migrate_techniques():
+  techniques = ncf.get_all_techniques_metadata(True, alt_path='/var/rudder/configuration-repository/ncf')['data']['techniques']
+  for technique, metadata in techniques.items():
+    ncf.write_technique(metadata, '/var/rudder/configuration-repository/ncf', False)
+
 
 def usage():
   sys.stderr.write("Can't parse parameters\n")
@@ -271,6 +276,8 @@ if __name__ == '__main__':
     write_all_techniques_for_rudder(sys.argv[2])
   elif sys.argv[1] == "rudderify_technique":
     write_one_technique_for_rudder(sys.argv[2],sys.argv[3])
+  elif sys.argv[1] == "migrate_techniques":
+    migrate_techniques()
   else:
     usage()
     exit(1)
