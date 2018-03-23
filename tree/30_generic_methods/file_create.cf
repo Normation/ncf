@@ -44,10 +44,10 @@ bundle agent file_create(target)
       "disable_reporting"     usebundle => disable_reporting;
     "action"             usebundle => file_present("${target}");
       "reenable_reporting"    usebundle => enable_reporting,
-                             ifvarclass => "should_report";
+                             if => "should_report";
     "class copy"         usebundle => _classes_copy("file_present_${canonified_file}", "${old_class_prefix}"),
-                         ifvarclass => "file_present_${canonified_file}_reached";
+                         if => "file_present_${canonified_file}_reached";
     "new result classes" usebundle => _classes_copy("${class_prefix}_action", "${class_prefix}"),
-                         ifvarclass => "${class_prefix}_action_reached";
+                         if => "${class_prefix}_action_reached";
     "report" usebundle => _log("Presence of file ${target}", "${old_class_prefix}", "${class_prefix}", @{args});
 }

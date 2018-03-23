@@ -145,16 +145,16 @@ bundle agent package_state(name, version, architecture, provider, state)
       "action"                 usebundle => ncf_package("${name}", "${version}", "${architecture}", "${provider}", "${state}", "");
 
       "reenable_reporting"    usebundle => enable_reporting,
-                             ifvarclass => "should_report";
+                             if => "should_report";
       "class copy"             usebundle => _classes_copy("ncf_package_${canonified_state}_${canonified_name}", "${old_class_prefix}"),
-                              ifvarclass => "ncf_package_${canonified_state}_${canonified_name}_reached";
+                              if => "ncf_package_${canonified_state}_${canonified_name}_reached";
       "new result classes"     usebundle => _classes_copy("${class_prefix}_action", "${class_prefix}"),
-                              ifvarclass => "${class_prefix}_action_reached";
+                              if => "${class_prefix}_action_reached";
 
       # For compatibility with previous version of the generic method
       "class copy compat"      usebundle => _classes_copy("ncf_package_${canonified_state}_${canonified_name}", "package_${canonified_state}_${canonified_name}"),
-                              ifvarclass => "ncf_package_${canonified_state}_${canonified_name}_reached";
+                              if => "ncf_package_${canonified_state}_${canonified_name}_reached";
 
       "report"                 usebundle => _log("${ncf_package.message}", "${old_class_prefix}", "${class_prefix}", @{args}),
-                              ifvarclass => "(!has_promiser_stack.${old_class_prefix}_reached)|(has_promiser_stack.${class_prefix}_reached)";
+                              if => "(!has_promiser_stack.${old_class_prefix}_reached)|(has_promiser_stack.${class_prefix}_reached)";
 }

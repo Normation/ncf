@@ -53,11 +53,11 @@ bundle agent file_download(source, destination)
       "disable_reporting"     usebundle => disable_reporting;
     "action"             usebundle => file_from_http_server("${source}", "${destination}");
       "reenable_reporting"    usebundle => enable_reporting,
-                             ifvarclass => "should_report";
+                             if => "should_report";
     "class copy"         usebundle => _classes_copy("file_from_http_server_${canonified_destination}", "${old_class_prefix}"),
-                         ifvarclass => "file_from_http_server_${canonified_destination}_reached";
+                         if => "file_from_http_server_${canonified_destination}_reached";
     "new result classes" usebundle => _classes_copy("${class_prefix}_action", "${class_prefix}"),
-                         ifvarclass => "${class_prefix}_action_reached";
+                         if => "${class_prefix}_action_reached";
     "report"             usebundle => _log("Download ${source} into ${destination}", "${old_class_prefix}", "${class_prefix}", @{args});
 
 }

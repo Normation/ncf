@@ -50,7 +50,7 @@ bundle agent service_stop(service_name)
     "stop"      usebundle => service_action("${service_name}", "stop");
 
       "reenable_reporting"    usebundle => enable_reporting,
-                             ifvarclass => "should_report";
+                             if => "should_report";
     any::
       "class copy" usebundle => _classes_copy("service_action_${canonified_service_name}", "${old_class_prefix}");
 

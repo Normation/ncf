@@ -58,7 +58,7 @@ bundle agent dispatcher
         classes => classes_generic("dispatcher_reports");
     any::
       "${configuration.error} Could not run bundle ${services_array_${services}[2]} (with service path ${services_array_${services}[0]})"
-        ifvarclass => canonify("dispatcher_${services_array_${services}[2]}_not_ok");
+        if => canonify("dispatcher_${services_array_${services}[2]}_not_ok");
 }
 
 # Execute the bundle for a service.
@@ -70,7 +70,7 @@ bundle agent caller(service_path, service_name, service_version)
       "$(service_name)"
         usebundle  => ${service_name}(${service_path}),
         classes    => classes_generic("caller_${service_name}"),
-        ifvarclass => canonify("caller_reports_start_${service_name}_reached");
+        if => canonify("caller_reports_start_${service_name}_reached");
 
   reports:
     info::
@@ -78,10 +78,10 @@ bundle agent caller(service_path, service_name, service_version)
         classes => classes_generic("caller_reports_start_${service_name}");
 
       "${configuration.info} Finished bundle execution: ${service_name} (with path ${service_path})"
-        ifvarclass => canonify("caller_${service_name}_ok");
+        if => canonify("caller_${service_name}_ok");
 
     any::
       "${configuration.error} Error in bundle execution: ${service_name} (with path ${service_path})"
-        ifvarclass => canonify("caller_${service_name}_not_ok");
+        if => canonify("caller_${service_name}_not_ok");
 
 }

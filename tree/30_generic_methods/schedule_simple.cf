@@ -65,19 +65,19 @@ bundle agent schedule_simple(job_id, agent_periodicity,
                                                               "${periodicity_minutes}", "${periodicity_hours}", "${periodicity_days}", "${mode}");
 
       "reenable_reporting"    usebundle => enable_reporting,
-                             ifvarclass => "should_report";
+                             if => "should_report";
       "kept"     usebundle => _classes_success("${old_class_prefix}"),
-                 ifvarclass => "!job_${job_id}_run.!job_${job_id}_error";
+                 if => "!job_${job_id}_run.!job_${job_id}_error";
       "kept"     usebundle => _classes_success("${class_prefix}"),
-                 ifvarclass => "!job_${job_id}_run.!job_${job_id}_error";
+                 if => "!job_${job_id}_run.!job_${job_id}_error";
       "repaired" usebundle => _classes_repaired("${old_class_prefix}"),
-                 ifvarclass => "job_${job_id}_run";
+                 if => "job_${job_id}_run";
       "repaired" usebundle => _classes_repaired("${class_prefix}"),
-                 ifvarclass => "job_${job_id}_run";
+                 if => "job_${job_id}_run";
       "error"    usebundle => _classes_failure("${old_class_prefix}"),
-                 ifvarclass => "job_${job_id}_error";
+                 if => "job_${job_id}_error";
       "error"    usebundle => _classes_failure("${class_prefix}"),
-                 ifvarclass => "job_${job_id}_error";
+                 if => "job_${job_id}_error";
 
       "report"    usebundle => _log("Scheduling ${job_id}", "${old_class_prefix}", "${class_prefix}", @{args});
 }

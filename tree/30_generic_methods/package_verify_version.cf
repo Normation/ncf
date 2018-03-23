@@ -40,7 +40,7 @@ bundle agent package_verify_version(package_name, package_version)
       "disable_reporting"     usebundle => disable_reporting;
     "package verify"     usebundle => package_install_version_cmp("${package_name}", "==", "${package_version}", "verify");
       "reenable_reporting"    usebundle => enable_reporting,
-                             ifvarclass => "should_report";
+                             if => "should_report";
     "new result classes" usebundle => _classes_copy("${class_prefix}_package_verify", "${class_prefix}");
 
     "report"             usebundle => _log("Verify that package ${package_name} is installed in version ${package_version}", "", "${class_prefix}", @{args});

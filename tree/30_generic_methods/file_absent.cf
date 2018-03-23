@@ -39,10 +39,10 @@ bundle agent file_absent(target)
 
   methods:
     "success_if_nothing" usebundle => _classes_success("${old_class_prefix}"),
-                         ifvarclass => "!${old_class_prefix}_reached";
+                         if => "!${old_class_prefix}_reached";
 
     "success_if_nothing" usebundle => _classes_success("${class_prefix}"),
-                         ifvarclass => "has_promiser_stack.!${class_prefix}_reached";
+                         if => "has_promiser_stack.!${class_prefix}_reached";
 
     "report"             usebundle => _log("Remove file ${target}", "${old_class_prefix}", "${class_prefix}", @{args});
 

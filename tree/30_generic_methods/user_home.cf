@@ -44,7 +44,7 @@ bundle agent user_home(login, home)
       "${login}"  policy        => "present",
                   home_dir      => "${home}",
                   classes       => classes_generic_two("${old_class_prefix}", "${class_prefix}"),
-                  ifvarclass    => "args_defined";
+                  if    => "args_defined";
 
   methods:
     !args_defined::
@@ -57,6 +57,6 @@ bundle agent user_home(login, home)
     args_defined::
       "report_success"
         usebundle => _log("User ${login} home set to ${home}", "${old_class_prefix}", "${class_prefix}", @{args}),
-          ifvarclass => "(!has_promiser_stack.${old_class_prefix}_reached)|(has_promiser_stack.${class_prefix}_reached)";
+          if => "(!has_promiser_stack.${old_class_prefix}_reached)|(has_promiser_stack.${class_prefix}_reached)";
 }
 

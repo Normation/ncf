@@ -46,10 +46,10 @@ bundle agent file_ensure_block_in_section(file, section_start, section_end, bloc
       "disable_reporting"     usebundle => disable_reporting;
     "action"             usebundle => file_block_present_in_section("${file}", "${section_start}", "${section_end}", "${block}");
       "reenable_reporting"    usebundle => enable_reporting,
-                             ifvarclass => "should_report";
+                             if => "should_report";
     "class copy"         usebundle => _classes_copy("file_block_present_in_section_${canonified_file}", "${old_class_prefix}"),
-                         ifvarclass => "file_block_present_in_section_${canonified_file}_reached";
+                         if => "file_block_present_in_section_${canonified_file}_reached";
     "new result classes" usebundle => _classes_copy("${class_prefix}_action", "${class_prefix}"),
-                         ifvarclass => "${class_prefix}_action_reached";
+                         if => "${class_prefix}_action_reached";
     "report" usebundle => _log("Insert text block ${block} into ${file}", "${old_class_prefix}", "${class_prefix}", @{args});
 }

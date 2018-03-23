@@ -67,14 +67,14 @@ bundle agent file_from_http_server(source, destination)
 
     any::
       "reenable_reporting"    usebundle => enable_reporting,
-                             ifvarclass => "should_report";
+                             if => "should_report";
     (_stdlib_path_exists_curl|_stdlib_path_exists_wget).!file_exists::
       "class copy"                usebundle => _classes_copy("command_execution_${canonified_action_command}", "${old_class_prefix}");
 
       "new result classes"        usebundle => _classes_copy("${class_prefix}_action", "${class_prefix}");
 
       "report"                    usebundle => _log("Download ${source} into ${destination}", "${old_class_prefix}", "${class_prefix}", @{args}),
-                                 ifvarclass => "(!has_promiser_stack.${old_class_prefix}_reached)|(has_promiser_stack.${class_prefix}_reached)";
+                                 if => "(!has_promiser_stack.${old_class_prefix}_reached)|(has_promiser_stack.${class_prefix}_reached)";
 
 
     !_stdlib_path_exists_curl.!_stdlib_path_exists_wget.!file_exists::
@@ -85,10 +85,10 @@ bundle agent file_from_http_server(source, destination)
 
     file_exists::
       "force_success_class"       usebundle => _classes_success("${old_class_prefix}"),
-                                 ifvarclass => "!command_execution_${canonified_action_command}_repaired";
+                                 if => "!command_execution_${canonified_action_command}_repaired";
       "new result classes"        usebundle => _classes_success("${class_prefix}"),
-                                 ifvarclass => "!${class_prefix}_action_repaired";
+                                 if => "!${class_prefix}_action_repaired";
       "report"                    usebundle => _log("File ${destination} already downloaded", "${old_class_prefix}", "${class_prefix}", @{args}),
-                                 ifvarclass => "(!has_promiser_stack.!command_execution_${canonified_action_command}_repaired)|(has_promiser_stack.!${class_prefix}_action_repaired)";
+                                 if => "(!has_promiser_stack.!command_execution_${canonified_action_command}_repaired)|(has_promiser_stack.!${class_prefix}_action_repaired)";
 
 }

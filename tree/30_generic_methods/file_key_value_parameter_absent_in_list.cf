@@ -97,15 +97,15 @@ bundle agent file_key_value_parameter_absent_in_list(file, key, key_value_separa
   methods:
     pass2.has_promiser_stack::
       "success class" usebundle  => _classes_success("${class_prefix}"),
-                      ifvarclass => "!line_with_parameter_present";
+                      if => "!line_with_parameter_present";
       "error_class"   usebundle => _classes_failure("${class_prefix}"),
-                      ifvarclass => "invalid_enclosing";
+                      if => "invalid_enclosing";
 
     pass2.!has_promiser_stack::
       "success class" usebundle  => _classes_success("${old_class_prefix}"),
-                      ifvarclass => "!line_with_parameter_present";
+                      if => "!line_with_parameter_present";
       "error_class"   usebundle => _classes_failure("${old_class_prefix}"),
-                      ifvarclass => "invalid_enclosing";
+                      if => "invalid_enclosing";
 
     pass2.!invalid_enclosing.line_with_key_present::
       "report"   usebundle => _log("Ensure ${parameter_regex} is not in ${key}${key_value_separator} values in ${file}", "${old_class_prefix}", "${class_prefix}", @{args});

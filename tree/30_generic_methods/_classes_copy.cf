@@ -37,13 +37,13 @@ bundle agent _classes_copy(source_prefix, destination_prefix)
       # Copy result classes prefixes
       "${prefix}_local_destination_prefix"
         string     => "${prefix}_${destination_prefix}",
-        ifvarclass => "${prefix}_${source_prefix}",
+        if => "${prefix}_${source_prefix}",
         classes    => always("${prefix}_${destination_prefix}");
 
       # Copy result classes suffixes
       "local_destination_prefix_${suffix}"
         string     => "${destination_prefix}_${suffix}",
-        ifvarclass => "${source_prefix}_${suffix}",
+        if => "${source_prefix}_${suffix}",
         classes    => always("${destination_prefix}_${suffix}");
 
   classes:

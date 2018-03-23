@@ -41,6 +41,6 @@ bundle agent user_absent(login)
   methods:
       "report"
         usebundle => _log("User ${login} absent", "${old_class_prefix}", "${class_prefix}", @{args}),
-        ifvarclass => "(!has_promiser_stack.${old_class_prefix}_reached)|(has_promiser_stack.${class_prefix}_reached)";
+        if => "(!has_promiser_stack.${old_class_prefix}_reached)|(has_promiser_stack.${class_prefix}_reached)";
 
 }

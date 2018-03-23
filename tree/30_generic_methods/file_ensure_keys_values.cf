@@ -98,10 +98,10 @@ bundle agent file_ensure_keys_values(file, keys, separator)
       "disable_reporting"     usebundle => disable_reporting;
     "action"             usebundle => file_keys_values_present("${file}", "${keys}", "${separator}");
       "reenable_reporting"    usebundle => enable_reporting,
-                             ifvarclass => "should_report";
+                             if => "should_report";
     "class copy"         usebundle => _classes_copy("file_keys_values_present_${canonified_file}", "${old_class_prefix}"),
-                         ifvarclass => "file_keys_values_present_${canonified_file}_reached";
+                         if => "file_keys_values_present_${canonified_file}_reached";
     "new result classes" usebundle => _classes_copy("${class_prefix}_action", "${class_prefix}"),
-                         ifvarclass => "${class_prefix}_action_reached";
+                         if => "${class_prefix}_action_reached";
       "report"   usebundle => _log("Ensure lines in format key${separator}values into ${file}", "${old_class_prefix}", "${class_prefix}", @{args});
 }

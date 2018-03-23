@@ -49,7 +49,7 @@ bundle agent package_install_version_cmp(package_name, version_comparator, packa
       "disable_reporting"     usebundle => disable_reporting;
       "install or update"  usebundle => package_install_version_cmp_update("${package_name}", "${version_comparator}", "${package_version}", "${action}", "true");
       "reenable_reporting"    usebundle => enable_reporting,
-                             ifvarclass => "should_report";
+                             if => "should_report";
       "new result classes" usebundle => _classes_copy("${class_prefix}_install_or_update", "${class_prefix}");
 
       "report"             usebundle => _log("Install package ${package_name} version ${package_version}", "", "${class_prefix}", @{args});

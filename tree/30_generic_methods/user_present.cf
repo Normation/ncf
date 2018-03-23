@@ -69,6 +69,6 @@ bundle agent user_present(login)
     args_defined::
       "report_success"
         usebundle => _log("User ${login} present", "${old_class_prefix}", "${class_prefix}", @{args}),
-          ifvarclass => "((!has_promiser_stack.${old_class_prefix}_reached)|(has_promiser_stack.${class_prefix}_reached))";
+          if => "((!has_promiser_stack.${old_class_prefix}_reached)|(has_promiser_stack.${class_prefix}_reached))";
 }
 
