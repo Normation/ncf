@@ -49,7 +49,7 @@ bundle agent service_start(service_name)
     "start"      usebundle => service_action("${service_name}", "start");
 
       "reenable_reporting"    usebundle => enable_reporting,
-                             ifvarclass => "should_report";
+                             if => "should_report";
     "class copy" usebundle => _classes_copy("service_action_${canonified_service_name}", "${old_class_prefix}");
 
     "class copy" usebundle => _classes_copy("${class_prefix}_start", "${class_prefix}");

@@ -64,7 +64,7 @@ bundle agent directory_absent(target, recursive)
         delete        => tidy,
         file_select   => all,
         classes       => classes_generic_two("${old_class_prefix}", "${class_prefix}"),
-        ifvarclass    => "!${class_prefix}_inside_error";
+        if    => "!${class_prefix}_inside_error";
 
   methods:
 
@@ -80,9 +80,9 @@ bundle agent directory_absent(target, recursive)
     pass3::
       # Use classes of the first promise when it failed
       "copy_inside_error"   usebundle  => _classes_copy("${class_prefix}_inside", "${class_prefix}"),
-                            ifvarclass => "${class_prefix}_inside_error";
+                            if => "${class_prefix}_inside_error";
       "copy_inside_error"   usebundle  => _classes_copy("${old_class_prefix}_inside", "${old_class_prefix}"),
-                            ifvarclass => "${old_class_prefix}_inside_error";
+                            if => "${old_class_prefix}_inside_error";
 
       "report" usebundle => _log("Remove directory ${target}", "${old_class_prefix}", "${class_prefix}", @{args});
 

@@ -42,7 +42,7 @@ bundle agent user_fullname(login, fullname)
       "${login}"  policy        => "present",
                   description   => "${fullname}",
                   classes       => classes_generic_two("${old_class_prefix}", "${class_prefix}"),
-                  ifvarclass    => "args_defined";
+                  if    => "args_defined";
 
   methods:
     !args_defined::
@@ -55,7 +55,7 @@ bundle agent user_fullname(login, fullname)
     args_defined::
       "report_success"
         usebundle => _log("User ${login} fullname set to ${fullname}", "${old_class_prefix}", "${class_prefix}", @{args}),
-          ifvarclass => "(!has_promiser_stack.${old_class_prefix}_reached)|(has_promiser_stack.${class_prefix}_reached)";
+          if => "(!has_promiser_stack.${old_class_prefix}_reached)|(has_promiser_stack.${class_prefix}_reached)";
 
 }
 

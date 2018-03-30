@@ -50,7 +50,7 @@ bundle agent group_absent(group)
     pass2::
       "report"
         usebundle => _log("Group ${group} absent", "${old_class_prefix}", "${class_prefix}", @{args}),
-        ifvarclass => "(!has_promiser_stack.${old_class_prefix}_reached)|(has_promiser_stack.${class_prefix}_reached)";
+        if => "(!has_promiser_stack.${old_class_prefix}_reached)|(has_promiser_stack.${class_prefix}_reached)";
 
   commands:
     group_present.!windows.!aix::

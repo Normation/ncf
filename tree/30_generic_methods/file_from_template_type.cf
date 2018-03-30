@@ -126,7 +126,7 @@ bundle agent file_from_template_type(source_template, destination, template_type
       edit_template   => "${source_template}",
       template_method => "${template_type}",
       edit_defaults   => ncf_empty_select("true"),
-      ifvarclass      => "!is_jinja2.template_exists",
+      if      => "!is_jinja2.template_exists",
       classes         => classes_generic_two("${old_class_prefix}", "${class_prefix}");
 
   methods:
@@ -136,7 +136,7 @@ bundle agent file_from_template_type(source_template, destination, template_type
 
     any::
       "reenable_reporting"    usebundle => enable_reporting,
-                             ifvarclass => "should_report";
+                             if => "should_report";
     is_jinja2.template_exists::
     !template_exists::
       "template_absent" usebundle => _classes_failure("${old_class_prefix}");

@@ -53,12 +53,12 @@ bundle agent package_present(name, version, architecture, provider)
       "action"                 usebundle => ncf_package("${name}", "${version}", "${architecture}", "${provider}", "present", "");
 
       "reenable_reporting"    usebundle => enable_reporting,
-                             ifvarclass => "should_report";
+                             if => "should_report";
       "class copy"             usebundle => _classes_copy("ncf_package_present_${canonified_name}", "${old_class_prefix}"),
-                              ifvarclass => "ncf_package_present_${canonified_name}_reached";
+                              if => "ncf_package_present_${canonified_name}_reached";
       "new result classes"     usebundle => _classes_copy("${class_prefix}_action", "${class_prefix}"),
-                              ifvarclass => "${class_prefix}_action_reached";
+                              if => "${class_prefix}_action_reached";
 
       "report"                 usebundle => _log("${ncf_package.message}", "${old_class_prefix}", "${class_prefix}", @{args}),
-                              ifvarclass => "(!has_promiser_stack.${old_class_prefix}_reached)|(has_promiser_stack.${class_prefix}_reached)";
+                              if => "(!has_promiser_stack.${old_class_prefix}_reached)|(has_promiser_stack.${class_prefix}_reached)";
 }

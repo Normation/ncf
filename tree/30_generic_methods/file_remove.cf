@@ -44,10 +44,10 @@ bundle agent file_remove(target)
       "disable_reporting"     usebundle => disable_reporting;
     "action"             usebundle => directory_present("${target}");
       "reenable_reporting"    usebundle => enable_reporting,
-                             ifvarclass => "should_report";
+                             if => "should_report";
     "class copy"         usebundle => _classes_copy("file_absent_${canonified_target}", "${old_class_prefix}"),
-                         ifvarclass => "file_absent_${canonified_target}_reached";
+                         if => "file_absent_${canonified_target}_reached";
     "new result classes" usebundle => _classes_copy("${class_prefix}_action", "${class_prefix}"),
-                         ifvarclass => "${class_prefix}_action_reached";
+                         if => "${class_prefix}_action_reached";
     "report"             usebundle => _log("Remove file ${target}", "${old_class_prefix}", "${class_prefix}", @{args});
 }

@@ -104,12 +104,12 @@ bundle agent service_action(service_name, action)
       "action"                 usebundle => ncf_services("${service_name}", "${action}");
 
       "reenable_reporting"    usebundle => enable_reporting,
-                             ifvarclass => "should_report";
+                             if => "should_report";
       "class copy"             usebundle => _classes_copy("ncf_services_${canonified_service_name}_${canonified_action}", "${old_class_prefix}"),
-                              ifvarclass => "ncf_services_${canonified_service_name}_${canonified_action}_reached";
+                              if => "ncf_services_${canonified_service_name}_${canonified_action}_reached";
       "new result classes"     usebundle => _classes_copy("${class_prefix}_action", "${class_prefix}"),
-                              ifvarclass => "${class_prefix}_action_reached";
+                              if => "${class_prefix}_action_reached";
 
       "report"                 usebundle => _log("Run action ${action} on service ${service_name}", "${old_class_prefix}", "${class_prefix}", @{args}),
-                              ifvarclass => "(!has_promiser_stack.${old_class_prefix}_reached)|(has_promiser_stack.${class_prefix}_reached)";
+                              if => "(!has_promiser_stack.${old_class_prefix}_reached)|(has_promiser_stack.${class_prefix}_reached)";
 }

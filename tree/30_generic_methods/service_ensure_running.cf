@@ -44,7 +44,7 @@ bundle agent service_ensure_running(service_name)
       "disable_reporting"     usebundle => disable_reporting;
     "action"      usebundle => service_started("${service_name}");
       "reenable_reporting"    usebundle => enable_reporting,
-                             ifvarclass => "should_report";
+                             if => "should_report";
     "class copy"  usebundle => _classes_copy("service_started_${canonified_service_name}", "${old_class_prefix}"),
                   if => "service_started_${canonified_service_name}_reached";
     "new classes" usebundle => _classes_copy("${class_prefix}_action", "${class_prefix}"),

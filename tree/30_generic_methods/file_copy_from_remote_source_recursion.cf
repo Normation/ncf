@@ -57,10 +57,10 @@ bundle agent file_copy_from_remote_source_recursion(source, destination, recursi
       "disable_reporting"     usebundle => disable_reporting;
     "action"             usebundle => file_from_remote_source_recursion("${source}", "${destination}", "${recursion}");
       "reenable_reporting"    usebundle => enable_reporting,
-                             ifvarclass => "should_report";
+                             if => "should_report";
     "class copy"         usebundle => _classes_copy("file_from_remote_source_${canonified_file}", "${old_class_prefix}"),
-                         ifvarclass => "file_from_remote_source_${canonified_file}_reached";
+                         if => "file_from_remote_source_${canonified_file}_reached";
     "new result classes" usebundle => _classes_copy("${class_prefix}_action", "${class_prefix}"),
-                         ifvarclass => "${class_prefix}_action_reached";
+                         if => "${class_prefix}_action_reached";
     "report"             usebundle  => _log("Copying ${destination} from ${source}, recursion level ${recursion}", "${old_class_prefix}", "${class_prefix}", @{args});
 }

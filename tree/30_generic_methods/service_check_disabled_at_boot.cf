@@ -44,16 +44,16 @@ bundle agent service_check_disabled_at_boot(service_name)
       "check_enabled"      usebundle => ncf_services("${service_name}", "is-enabled");
 
       "reenable_reporting"    usebundle => enable_reporting,
-                             ifvarclass => "should_report";
+                             if => "should_report";
       "success" usebundle => _classes_success("${old_class_prefix}"),
-               ifvarclass => "ncf_services_${canonified_service_name}_is_enabled_not_ok";
+               if => "ncf_services_${canonified_service_name}_is_enabled_not_ok";
       "success" usebundle => _classes_success("${class_prefix}"),
-               ifvarclass => "${class_prefix}_check_enabled_not_ok";
+               if => "${class_prefix}_check_enabled_not_ok";
 
       "failure" usebundle => _classes_failure("${old_class_prefix}"),
-               ifvarclass => "ncf_services_${canonified_service_name}_is_enabled_ok";
+               if => "ncf_services_${canonified_service_name}_is_enabled_ok";
       "failure" usebundle => _classes_failure("${class_prefix}"),
-               ifvarclass => "${class_prefix}_check_enabled_ok";
+               if => "${class_prefix}_check_enabled_ok";
 
       "reports" usebundle => _log("Check if service ${service_name} is disabled at boot", "${old_class_prefix}", "${class_prefix}", @{args});
 
