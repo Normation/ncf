@@ -37,7 +37,6 @@
 # @parameter periodicity_minutes   How often should the job run
 # @parameter periodicity_hours     How often should the job run
 # @parameter periodicity_days      How often should the job run
-# @parameter mode                  "nodups": avoid duplicate runs in the same period / "catchup": avoid duplicates and one or more run have been missed, run once before next period / "stateless": no check is done on past runs
 # 
 # @class_prefix schedule_simple
 # @class_parameter job_id
@@ -50,7 +49,8 @@ bundle agent schedule_simple_catchup(job_id, agent_periodicity,
 {
   vars:
     any::
-      "old_class_prefix" string => "schedule_simple_${job_id}";
+      "canonified_job_id" string => canonify("${job_id}");
+      "old_class_prefix" string => "schedule_simple_${canonified_job_id}";
       "promisers"          slist => { @{this.callers_promisers}, cf_null }, policy => "ifdefined";
       "class_prefix"      string => canonify(join("_", "promisers"));
       "args"               slist => { "${job_id}", "${agent_periodicity}", "${max_execution_delay_minutes}", "${max_execution_delay_hours}", 
