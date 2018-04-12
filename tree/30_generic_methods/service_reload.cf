@@ -29,14 +29,11 @@
 bundle agent service_reload(service_name)
 {
   vars:
-
     "canonified_service_name" string => canonify("${service_name}");
-
     "old_class_prefix"        string => "service_reload_${canonified_service_name}";
-    "promisers"          slist => { @{this.callers_promisers}, cf_null }, policy => "ifdefined";
-    "class_prefix"      string => canonify(join("_", "promisers"));
-    "args"                    slist => { "${service_name}" };
-
+    "args"                     slist => { "${service_name}" };
+    "report_param"            string => join("_", args);
+    "class_prefix"            string => canonify("service_reload_${report_param}");
 
   classes:
       "should_report"    expression => "${report_data.should_report}";
@@ -48,9 +45,8 @@ bundle agent service_reload(service_name)
 
       "reenable_reporting_${old_class_prefix}"    usebundle => enable_reporting,
                              ifvarclass => "should_report";
-    "class copy" usebundle => _classes_copy("service_action_${canonified_service_name}", "${old_class_prefix}");
+    "class copy"     usebundle => _classes_copy("service_action_${canonified_service_name}", "${old_class_prefix}");
+    "new class copy" usebundle => _classes_copy("service_action_${canonified_service_name}", "${class_prefix}");
 
-    "class copy" usebundle => _classes_copy("${class_prefix}_reload", "${class_prefix}");
-
-    "report"     usebundle => _log("Reload service ${service_name}", "${old_class_prefix}", "${class_prefix}", @{args});
+    "report"         usebundle => _log("Reload service ${service_name}", "${old_class_prefix}", "${class_prefix}", @{args});
 }

@@ -31,14 +31,11 @@
 bundle agent service_restart_if(service_name, trigger_class)
 {
   vars:
-
     "canonified_service_name"      string => canonify("${service_name}");
-
     "old_class_prefix"             string => "service_restart_${canonified_service_name}";
-    "promisers"          slist => { @{this.callers_promisers}, cf_null }, policy => "ifdefined";
-    "class_prefix"      string => canonify(join("_", "promisers"));
     "args"                          slist => { "${service_name}",  "${trigger_class}" };
-
+    "report_param"                 string => join("_", args);
+    "class_prefix"                 string => canonify("service_restart_${report_param}");
 
   classes:
       "should_report"    expression => "${report_data.should_report}";
@@ -50,7 +47,6 @@ bundle agent service_restart_if(service_name, trigger_class)
       "success_class"              usebundle  => _classes_success("${old_class_prefix}"),
                                    # parenthesis used to negate all the classes
                                    ifvarclass => "!(${trigger_class})";
-
       "success_class"              usebundle  => _classes_success("${class_prefix}"),
                                    # parenthesis used to negate all the classes
                                    ifvarclass => "!(${trigger_class})";
@@ -60,8 +56,7 @@ bundle agent service_restart_if(service_name, trigger_class)
 
       "class copy"                 usebundle  => _classes_copy("service_action_${canonified_service_name}", "${old_class_prefix}"),
                                    ifvarclass => "${trigger_class}";
-
-      "class copy"                 usebundle  => _classes_copy("${class_prefix}_restart", "${class_prefix}"),
+      "class copy"                 usebundle  => _classes_copy("service_action_${canonified_service_name}", "${class_prefix}"),
                                    ifvarclass => "${trigger_class}";
 
       "reenable_reporting_${old_class_prefix}"    usebundle => enable_reporting,

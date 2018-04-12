@@ -85,15 +85,12 @@
 bundle agent service_action(service_name, action)
 {
   vars:
-
       "canonified_service_name"   string => canonify("${service_name}");
       "canonified_action" string => canonify("${action}");
-
       "old_class_prefix"          string => "service_action_${canonified_service_name}";
-      "promisers"                 slist  => { @{this.callers_promisers}, cf_null }, policy => "ifdefined";
-      "class_prefix"              string => canonify(join("_", "promisers"));
       "args"                      slist  => { "${service_name}", "${action}" };
-
+      "report_param"              string => join("_", args);
+      "class_prefix"              string => canonify("service_action_${report_param}");
 
   classes:
       "should_report"    expression => "${report_data.should_report}";
@@ -107,9 +104,8 @@ bundle agent service_action(service_name, action)
                              ifvarclass => "should_report";
       "class copy"             usebundle => _classes_copy("ncf_services_${canonified_service_name}_${canonified_action}", "${old_class_prefix}"),
                               ifvarclass => "ncf_services_${canonified_service_name}_${canonified_action}_reached";
-      "new result classes"     usebundle => _classes_copy("${class_prefix}_action", "${class_prefix}"),
-                              ifvarclass => "${class_prefix}_action_reached";
+      "new class copy"         usebundle => _classes_copy("ncf_services_${canonified_service_name}_${canonified_action}", "${class_prefix}"),
+                              ifvarclass => "ncf_services_${canonified_service_name}_${canonified_action}_reached";
 
-      "report"                 usebundle => _log("Run action ${action} on service ${service_name}", "${old_class_prefix}", "${class_prefix}", @{args}),
-                              ifvarclass => "(!has_promiser_stack.${old_class_prefix}_reached)|(has_promiser_stack.${class_prefix}_reached)";
+      "report"                 usebundle => _log("Run action ${action} on service ${service_name}", "${old_class_prefix}", "${class_prefix}", @{args});
 }

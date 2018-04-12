@@ -29,14 +29,11 @@
 bundle agent service_ensure_stopped(service_name)
 {
   vars:
-
     "canonified_service_name"      string => canonify("${service_name}");
-
     "old_class_prefix"             string => "service_ensure_stopped_${canonified_service_name}";
-    "promisers"          slist => { @{this.callers_promisers}, cf_null }, policy => "ifdefined";
-    "class_prefix"      string => canonify(join("_", "promisers"));
     "args"                          slist => { "${service_name}" };
-
+    "report_param"              string => join("_", args);
+    "class_prefix"              string => canonify("service_ensure_stopped_${report_param}");
 
   classes:
       "should_report"    expression => "${report_data.should_report}";
@@ -49,8 +46,8 @@ bundle agent service_ensure_stopped(service_name)
                              ifvarclass => "should_report";
     "class copy"         usebundle => _classes_copy("service_stopped_${canonified_service_name}", "${old_class_prefix}"),
                          ifvarclass => "service_stopped_${canonified_service_name}_reached";
-    "new result classes" usebundle => _classes_copy("${class_prefix}_action", "${class_prefix}"),
-                         ifvarclass => "${class_prefix}_action_reached";
+    "new class copy"     usebundle => _classes_copy("service_stopped_${canonified_service_name}", "${class_prefix}"),
+                         ifvarclass => "service_stopped_${canonified_service_name}_reached";
     "report"
         usebundle  => _log("Ensure that service ${service_name} is stopped", "${old_class_prefix}", "${class_prefix}", @{args});
 

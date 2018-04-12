@@ -1031,11 +1031,7 @@ bundle agent ncf_services(service, action)
       "canonified_service"        string => canonify("${service}");
       "canonified_action"         string => canonify("${action}");
       "canonified_action_command" string => canonify("${action_command}");
-
-      "old_class_prefix"  string => "ncf_services_${canonified_service}_${canonified_action}";
-      "promisers"          slist => { @{this.callers_promisers}, cf_null }, policy => "ifdefined";
-      "class_prefix"      string => canonify(join("_", "promisers"));
-      "args"               slist => { "${service}", "${action}" };
+      "class_prefix"              string => "ncf_services_${canonified_service}_${canonified_action}";
 
   defaults:
       # status is an alias to is-active (in systemd, it is not the same thing the only difference is the output, which is not kept anyway)
@@ -1096,27 +1092,19 @@ bundle agent ncf_services(service, action)
     # Actual command - for actions on non-windows systems, non using systemd
     #####
     pass2.is_check_action.!windows.!is_process_action.method_found.action_ok::
-      "force_success_class"    usebundle => _classes_success("${old_class_prefix}");
       "force_success_class"    usebundle => _classes_success("${class_prefix}");
 
     pass2.is_check_action.!windows.!is_process_action.method_found.!action_ok::
-      "force_failure_class"    usebundle => _classes_failure("${old_class_prefix}");
       "force_failure_class"    usebundle => _classes_failure("${class_prefix}");
 
     # Method not found
     pass2.(!method_found|(windows.!is_valid_action))::
-      "force_failure_class"    usebundle => _classes_failure("${old_class_prefix}");
       "force_failure_class"    usebundle => _classes_failure("${class_prefix}");
 
     # Classes for process check
     pass2::
-      "force_failure_process"  usebundle => _classes_failure("${old_class_prefix}"),
-                              ifvarclass => "${old_class_prefix}_checked_not_ok";
       "force_failure_process"  usebundle => _classes_failure("${class_prefix}"),
-                              ifvarclass => "${old_class_prefix}_checked_not_ok";
-
-      "force_success_process"  usebundle => _classes_success("${old_class_prefix}"),
-                              ifvarclass => "${old_class_prefix}_checked_ok";
+                              ifvarclass => "${class_prefix}_checked_not_ok";
       "force_success_process"  usebundle => _classes_success("${class_prefix}"),
                               ifvarclass => "${class_prefix}_checked_ok";
 
@@ -1128,11 +1116,11 @@ bundle agent ncf_services(service, action)
 
     is_process_action::
       "${service}"
-        process_count => any_count_two("${old_class_prefix}_checked_ok", "${class_prefix}_checked_ok");
+        process_count => any_count("${class_prefix}_checked_ok");
 
       "${service}"
         # missing new_class_prefix : we cannot put 2 classes here, so we put the only one that we are sure works
-        restart_class => "${old_class_prefix}_checked_not_ok";
+        restart_class => "${class_prefix}_checked_not_ok";
 
   services:
 
@@ -1147,17 +1135,17 @@ bundle agent ncf_services(service, action)
     windows.is_valid_action.!is_restart_action::
       "${service}"
         service_policy => "${action}",
-        classes        => classes_generic_two("${old_class_prefix}", "${class_prefix}");
+        classes        => classes_generic("${class_prefix}");
 
     windows.is_restart_action::
       "${service}"
         service_policy => "stop",
-        classes        => classes_generic_two("${old_class_prefix}_stop_service", "${class_prefix}_stop_service");
+        classes        => classes_generic("${class_prefix}_stop_service");
 
       "${service}"
         service_policy => "start",
-        classes        => classes_generic_two("${old_class_prefix}", "${class_prefix}"),
-        ifvarclass     => "(!has_promiser_stack.${old_class_prefix}_stop_service_ok)|(has_promiser_stack.${class_prefix}_stop_service_ok)";
+        classes        => classes_generic("${class_prefix}"),
+        ifvarclass     => "${class_prefix}_stop_service_ok";
 
   commands:
     #####
@@ -1170,7 +1158,7 @@ bundle agent ncf_services(service, action)
     pass2.!is_check_action.!windows.!is_process_action.method_found::
       "${action_command}"
         contain => in_shell_and_silent,
-        classes => classes_generic_two("${old_class_prefix}", "${class_prefix}");
+        classes => classes_generic("${class_prefix}");
 
   reports:
 
