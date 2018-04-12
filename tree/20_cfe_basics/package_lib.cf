@@ -22,9 +22,9 @@ bundle agent ncf_package(name, version, architecture, provider, state, options)
   vars:
       "canonified_name"  string => canonify("${name}");
       "old_class_prefix" string => "ncf_package_${state}_${canonified_name}";
-      "promisers"        slist  => { @{this.callers_promisers}, cf_null }, policy => "ifdefined";
-      "class_prefix"     string => canonify(join("_", "promisers"));
       "args"             slist  => { "${name}", "${version}", "${architecture}", "${provider}", "${state}", "${options}" };
+      "report_param"     string => join("_", args);
+      "class_prefix"     string => canonify("ncf_package_${report_param}");
 
     # Build string vars used for reporting
 

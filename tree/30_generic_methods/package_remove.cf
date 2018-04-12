@@ -33,12 +33,11 @@
 bundle agent package_remove(package_name)
 {
   vars:
-
       "canonified_package_name" string => canonify("${package_name}");
       "old_class_prefix"        string => "package_remove_${canonified_package_name}";
       "args"                     slist => { "${package_name}" };
-      "report_param"      string => join("_", args);
-      "class_prefix"      string => canonify("package_remove_${report_param}");
+      "report_param"            string => join("_", args);
+      "class_prefix"            string => canonify("package_remove_${report_param}");
 
   packages:
       "${package_name}"
