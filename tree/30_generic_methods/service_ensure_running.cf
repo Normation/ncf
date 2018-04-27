@@ -30,12 +30,10 @@ bundle agent service_ensure_running(service_name)
 {
   vars:
     "canonified_service_name"      string => canonify("${service_name}");
-
     "old_class_prefix"             string => "service_ensure_running_${canonified_service_name}";
-    "promisers"          slist => { @{this.callers_promisers}, cf_null }, policy => "ifdefined";
-    "class_prefix"      string => canonify(join("_", "promisers"));
     "args"                          slist => { "${service_name}" };
-
+    "report_param"                 string => join("_", args);
+    "class_prefix"                 string => canonify("service_ensure_running_${report_param}");
 
   classes:
       "should_report"    expression => "${report_data.should_report}";
@@ -47,8 +45,7 @@ bundle agent service_ensure_running(service_name)
                              ifvarclass => "should_report";
     "class copy"  usebundle => _classes_copy("service_started_${canonified_service_name}", "${old_class_prefix}"),
                   if => "service_started_${canonified_service_name}_reached";
-    "new classes" usebundle => _classes_copy("${class_prefix}_action", "${class_prefix}"),
-                  if => "${class_prefix}_action_reached";
+    "new class copy"  usebundle => _classes_copy("service_started_${canonified_service_name}", "${class_prefix}"),
+                  if => "service_started_${canonified_service_name}_reached";
     "report"      usebundle  => _log("Ensure that service ${service_name} is running", "${old_class_prefix}", "${class_prefix}", @{args});
-
 }

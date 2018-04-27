@@ -31,14 +31,11 @@
 bundle agent service_stop(service_name)
 {
   vars:
-
     "canonified_service_name" string => canonify("${service_name}");
-
     "old_class_prefix"        string => "service_stop_${canonified_service_name}";
-    "promisers"          slist => { @{this.callers_promisers}, cf_null }, policy => "ifdefined";
-    "class_prefix"      string => canonify(join("_", "promisers"));
     "args"                     slist => { "${service_name}" };
-
+    "report_param"            string => join("_", args);
+    "class_prefix"            string => canonify("${old_class_prefix}_${report_param}");
 
   classes:
       "should_report"    expression => "${report_data.should_report}";
@@ -46,16 +43,13 @@ bundle agent service_stop(service_name)
   methods:
       "disable_reporting_${old_class_prefix}"     usebundle => disable_reporting;
 
-
     "stop"      usebundle => service_action("${service_name}", "stop");
 
       "reenable_reporting_${old_class_prefix}"    usebundle => enable_reporting,
                              ifvarclass => "should_report";
-    any::
-      "class copy" usebundle => _classes_copy("service_action_${canonified_service_name}", "${old_class_prefix}");
 
-      "class copy" usebundle => _classes_copy("${class_prefix}_stop", "${class_prefix}");
+      "class copy" usebundle => _classes_copy("service_action_${canonified_service_name}", "${old_class_prefix}");
+      "class copy" usebundle => _classes_copy("service_action_${canonified_service_name}", "${class_prefix}");
 
       "report"     usebundle => _log("Stop service ${service_name}", "${old_class_prefix}", "${class_prefix}", @{args});
-
 }
