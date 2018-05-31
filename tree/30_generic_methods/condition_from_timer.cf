@@ -1,0 +1,56 @@
+#####################################################################################
+# Copyright 2015 Normation SAS
+#####################################################################################
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, Version 3.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#
+#####################################################################################
+
+# @name Condition from timer
+# @description Create a new condition based on a timer based event
+# @documentation This bundle will define a condition `condition_from_timer_${condition_prefix}_{kept,ok,reached}`
+#
+# This bundle will additionally produce a `${condition_prefix}_true` or a `${condition_prefix}_false` condition.
+# * ${condition_prefix}_true is produced at first run and every time the timer runs out
+# * ${condition_prefix}_false is produced as long as the timer is running
+#
+# The created condition (class in CFEngine speaking) is global to the agent.
+#
+# @parameter condition_prefix The condition prefix
+# @parameter duration         The timer duration in munutes
+#
+# @class_prefix condition_from_timer
+# @class_parameter condition_prefix
+
+bundle agent condition_from_timer(condition_prefix, duration)
+{
+  vars:
+      "old_class_prefix"  string => canonify("condition_from_timer${condition_prefix}");
+      "args"               slist => { "${condition_prefix}", "${timer}" };
+      "report_param"      string => join("_", args);
+      "class_prefix"      string => canonify("condition_from_timer_${report_param}");
+
+  classes:
+      "${condition_prefix}_true"  expression => "any",
+                                   ifelapsed => "${duration}",
+                                       scope => "namespace";
+
+      "${condition_prefix}_false" expression => "!(${condition_prefix}_true)",
+                                       scope => "namespace";
+
+  methods:
+      "success" usebundle => _classes_success("${old_class_prefix}");
+      "success" usebundle => _classes_success("${class_prefix}");
+
+      "report"  usebundle => _log("Create the condition ${condition_prefix}_{true,false} every ${duration} mn", "${old_class_prefix}", "${class_prefix}", @{args});
+}
