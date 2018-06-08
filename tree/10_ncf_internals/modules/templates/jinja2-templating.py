@@ -69,7 +69,7 @@ def render(opts, args):
         env.undefined = StrictUndefined
 
     # Register customs
-    sys.path.append('/var/rudder/configuration-repository/ncf/modules/templates/')
+    sys.path.append('/var/rudder/ncf/local/modules/templates/')
 
     if pkgutil.find_loader('jinja2_custom') is None:
         custom_filters = False
