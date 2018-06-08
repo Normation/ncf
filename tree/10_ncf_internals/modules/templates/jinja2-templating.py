@@ -24,10 +24,9 @@ from optparse import OptionParser
 
 import jinja2
 from jinja2 import Environment, FileSystemLoader, StrictUndefined
-import jinja2.loaders
 
 from distutils.version import StrictVersion
-import pkgutil, importlib
+import pkgutil
 
 try:
     import simplejson as json
