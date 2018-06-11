@@ -78,12 +78,12 @@ def render(opts, args):
     custom_filters = pkgutil.find_loader('jinja2_custom') is not None
 
     if custom_filters:
-        import jinja2_custom
+        import jinja2_custom # pylint: disable=import-error
         if hasattr(jinja2_custom, 'FILTERS'):
-            from jinja2_custom import FILTERS as CUSTOM_FILTERS
+            from jinja2_custom import FILTERS as CUSTOM_FILTERS # pylint: disable=import-error
             env.filters.update(CUSTOM_FILTERS)
         if hasattr(jinja2_custom, 'TESTS'):
-            from jinja2_custom import TESTS as CUSTOM_TESTS
+            from jinja2_custom import TESTS as CUSTOM_TESTS # pylint: disable=import-error
             env.tests.update(CUSTOM_TESTS)
     sys.path.pop()
 
