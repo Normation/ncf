@@ -23,12 +23,13 @@
 
 # Licensed under:
 # MIT Public License
-# Copyright (C) 2012-2014 CFEngine AS
+# Copyright 2017 Northern.tech AS
 
 import sys
 import os
 import subprocess
 import re
+from distutils.version import StrictVersion
 
 
 rpm_cmd = os.environ.get('CFENGINE_TEST_RPM_CMD', "/bin/rpm")
@@ -40,8 +41,20 @@ zypper_options = ["--quiet", "-n"]
 
 NULLFILE = open(os.devnull, 'w')
 
-
 redirection_is_broken_cached = -1
+zypper_supports_oldpackage_cached = -1
+
+def zypper_supports_oldpackage():
+    # Suse zypper "--oldpackage" option is only supported greater that 1.6.169
+    global zypper_supports_oldpackage_cached
+    if zypper_supports_oldpackage_cached == -1:
+        process = subprocess_Popen([zypper_cmd, "--version"], stdout=subprocess.PIPE)
+        package_zypper_version = process.stdout.read().split(" ", 1)[1].rstrip()
+        if StrictVersion(package_zypper_version) >= StrictVersion("1.6.169"):
+            zypper_supports_oldpackage_cached = 1
+        else:
+            zypper_supports_oldpackage_cached = 0
+    return zypper_supports_oldpackage_cached
 
 def redirection_is_broken():
     # Older versions of Python have a bug where it is impossible to redirect
@@ -141,10 +154,10 @@ def list_updates(online):
 
 # Zypper's output looks like:
 #
-# S | Repository        | Name         | Current Version                    | Available Version                              | Arch  
+# S | Repository        | Name         | Current Version                    | Available Version                              | Arch
 # --+-------------------+--------------+------------------------------------+------------------------------------------------+-------
 # v | Rudder repository | rudder-agent | 1398866025:3.2.6.release-1.SLES.11 | 1398866025:3.2.7.rc1.git201609190419-1.SLES.11 | x86_64
-#    
+#
 # Which gives:
 #
 # v    | Rudder repository | rudder-agent       | 1398866025:3.2.6.release-1.SLES.11 | 1398866025:3.2.7.rc1.git201609190419-1.SLES.11 | x86_64
@@ -313,7 +326,12 @@ def repo_install():
     single_cmd_args, multi_cmd_args = package_arguments_builder(True)
 
     if single_cmd_args:
+
         cmd_line = [zypper_cmd] + zypper_options + ["install"]
+
+        if zypper_supports_oldpackage():
+            cmd_line += ["--oldpackage"]
+
         cmd_line.extend(single_cmd_args)
 
         ret = subprocess_call(cmd_line, stdout=NULLFILE)
@@ -336,7 +354,14 @@ def repo_install():
                 continue
 
             # Try to plain install.
-            cmd_line = [zypper_cmd] + zypper_options + ["install"] + block
+
+            cmd_line = [zypper_cmd] + zypper_options + ["install"]
+
+            if zypper_supports_oldpackage():
+                cmd_line += ["--oldpackage"]
+
+            cmd_line += block
+
             subprocess_call(cmd_line, stdout=NULLFILE)
 
             # No final check. CFEngine will figure out that it's missing
@@ -417,3 +442,4 @@ def main():
         return 2
 
 sys.exit(main())
+
