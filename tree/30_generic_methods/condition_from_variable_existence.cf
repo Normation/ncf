@@ -18,33 +18,35 @@
 
 # @name Condition from variable existence
 # @description Create a condition from the existence of a variable
-# @documentation This bundle will define a class `{condition_prefix}_{variable_name}_{true/false}
+# @documentation This bundle will define a class `{ConditionPrefix}_{VariableName}_{true/false}`
+# * `{ConditionPrefix}_{VariableName}_true` if the variable is defined
+# * `{ConditionPrefix}_{VariableName}_false` if the variable is not defined
 #
-# @parameter condition_prefix Prefix of the class (condition) generated
-# @parameter variable_name Complete name of the variable being tested, like my_prefix.my_variable
+# @parameter ConditionPrefix Prefix of the class (condition) generated
+# @parameter VariableName Complete name of the variable being tested, like my_prefix.my_variable
 #
 # @class_prefix condition_from_variable_existence
-# @class_parameter condition_prefix
+# @class_parameter ConditionPrefix
 
-bundle agent condition_from_variable_existence(condition_prefix, variable_name)
+bundle agent condition_from_variable_existence(ConditionPrefix, VariableName)
 {
   vars:
-      "old_class_prefix"  string => canonify("condition_from_variable_existence_${condition_prefix}");
-      "args"               slist => { "${condition_prefix}", "${variable_name}" };
+      "old_class_prefix"  string => canonify("condition_from_variable_existence_${ConditionPrefix}");
+      "args"               slist => { "${ConditionPrefix}", "${VariableName}" };
       "report_param"      string => join("_", args);
       "class_prefix"      string => canonify("condition_from_variable_existence_${report_param}");
 
   classes:
 
-      "${condition_prefix}_true"  expression => isvariable("${variable_name}"),
+      "${ConditionPrefix}_true"  expression => isvariable("${VariableName}"),
             scope => "namespace";
 
-      "${condition_prefix}_false"  not => isvariable("${variable_name}"),
+      "${ConditionPrefix}_false"  not => isvariable("${VariableName}"),
             scope => "namespace";
 
   methods:
       "success" usebundle => _classes_success("${old_class_prefix}");
       "success" usebundle => _classes_success("${class_prefix}");
 
-      "report"  usebundle => _log("Create the condition ${condition_prefix}_{true,false} from the existence of variable ${variable_name}", "${old_class_prefix}", "${class_prefix}", @{args});
+      "report"  usebundle => _log_v3("Create the condition ${ConditionPrefix}_{true,false} from the existence of variable ${ConditionPrefix}", "${ConditionPrefix}", "${old_class_prefix}", "${class_prefix}", @{args});
 }
