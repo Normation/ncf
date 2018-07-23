@@ -1,0 +1,52 @@
+#####################################################################################
+# Copyright 2015 Normation SAS
+#####################################################################################
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, Version 3.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#
+#####################################################################################
+
+# @name Condition from variable existence
+# @description Create a condition from the existence of a variable
+# @documentation This bundle will define a class `{ConditionPrefix}_{VariableName}_{true/false}`
+# * `{ConditionPrefix}_{VariableName}_true` if the variable is defined
+# * `{ConditionPrefix}_{VariableName}_false` if the variable is not defined
+#
+# @parameter ConditionPrefix Prefix of the class (condition) generated
+# @parameter VariableName Complete name of the variable being tested, like my_prefix.my_variable
+#
+# @class_prefix condition_from_variable_existence
+# @class_parameter ConditionPrefix
+
+bundle agent condition_from_variable_existence(ConditionPrefix, VariableName)
+{
+  vars:
+      "old_class_prefix"  string => canonify("condition_from_variable_existence_${ConditionPrefix}");
+      "args"               slist => { "${ConditionPrefix}", "${VariableName}" };
+      "report_param"      string => join("_", args);
+      "class_prefix"      string => canonify("condition_from_variable_existence_${report_param}");
+
+  classes:
+
+      "${ConditionPrefix}_true"  expression => isvariable("${VariableName}"),
+            scope => "namespace";
+
+      "${ConditionPrefix}_false"  not => isvariable("${VariableName}"),
+            scope => "namespace";
+
+  methods:
+      "success" usebundle => _classes_success("${old_class_prefix}");
+      "success" usebundle => _classes_success("${class_prefix}");
+
+      "report"  usebundle => _log_v3("Create the condition ${ConditionPrefix}_{true,false} from the existence of variable ${ConditionPrefix}", "${ConditionPrefix}", "${old_class_prefix}", "${class_prefix}", @{args});
+}
