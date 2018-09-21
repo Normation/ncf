@@ -32,3 +32,16 @@ bundle common test_utils {
       "have_perl" expression => fileexists("${paths.perl}");
       "test_utils_pass2"     expression => "any";
 }
+
+# To mimic Rudder config
+bundle common g {
+  vars:
+      "execRun" string => "myrun";
+      "uuid" string => "uuid";
+}
+
+bundle agent set_test_reporting_context {
+  methods:
+    "reporting" usebundle => rudder_reporting_context_id("test", "technique");
+    "reporting" usebundle => _method_reporting_context("component", "key");
+}
