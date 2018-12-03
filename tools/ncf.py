@@ -300,7 +300,6 @@ def parse_technique_methods(technique_file):
     raise NcfError("No such file: " + technique_file)
 
   env = os.environ.copy()
-  env['RES_OPTIONS'] = 'attempts:0'
   out = check_output(["cf-promises", "-pjson", "-f", technique_file], env=env)
   try:
     promises = json.loads(out)
