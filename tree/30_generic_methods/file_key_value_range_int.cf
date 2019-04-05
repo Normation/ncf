@@ -1,0 +1,93 @@
+#####################################################################################
+# Copyright 2019 Normation SAS
+#####################################################################################
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, Version 3.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#
+#####################################################################################
+
+# @name File key-value range int
+# @description Ensure that one parameter in the right hand side of a key->values line is an int and is the given range.
+# @documentation Audit the file, and verify that the `values` part from a key->values line is an int and is in the given range.
+#
+# @parameter file File name to edit (absolute path on the target node)
+# @parameter key Full key name
+# @parameter key_value_separator character used to separate key and value in a key-value line
+# @parameter min Minimal int value authorized
+# @parameter max Maximal int value authorized
+#
+# @parameter_constraint key_value_separator "allow_whitespace_string" : true
+# @parameter_constraint min "regex" : "^[0-9]+$"
+# @parameter_constraint max "regex" : "^[0-9]+$"
+#
+# @class_prefix file_key_value_range_int
+# @class_parameter file
+
+bundle agent file_key_value_range_int(file, key, key_value_separator, min, max)
+{
+  vars:
+      "old_class_prefix"  string => canonify("file_key_value_range_int_${file}");
+      "args"               slist => { "${file}", "${key}", "${key_value_separator}", "${min}", "${max}" };
+      "report_param"      string => join("_", args);
+      "full_class_prefix" string => canonify("file_key_value_range_int${report_param}");
+      "class_prefix"      string => string_head("${full_class_prefix}", "1000");
+
+
+      "escaped_key"       string => escape("${key}");
+
+      "lines_list"  slist => readstringlist("${file}", "", "\n", "99999999999", "99999999999");
+      "lines_length"  int => length("lines_list");
+      "indices" slist => expandrange("[1-${lines_length}]", 1);
+      "lines[${indices}]" string => nth("lines_list", "${indices}");
+
+    pass1.keys_found::
+      "report_string" string => "";
+      "report_string" string => "${report_string}${lines[${indices}]} => ${int_${indices}[1]} is in range ${min}-${max}${const.endl}",
+        ifvarclass => "is_in_range_${indices}.key_found_${indices}";
+      "report_string" string => "${report_string}line ${lines[${indices}]} => ${int_${indices}[1]} IS NOT in range ${min}-${max}${const.endl}",
+        ifvarclass => "!is_in_range_${indices}.key_found_${indices}.int_match_${indices}";
+      "report_string" string => "${report_string}line ${lines[${indices}]} => IS NOT and int and is could not be in range ${min}-${max}${const.endl}",
+        ifvarclass => "!is_in_range_${indices}.key_found_${indices}.!int_match_${indices}";
+
+
+  classes:
+      "pass2" expression => "pass1";
+      "pass1" expression => "any";
+      "keys_found" not => strcmp("${lines_length}", "0");
+
+    keys_found::
+      "key_found_${indices}" expression => regcmp("${key}\s*${key_value_separator}.*", "${lines[${indices}]}");
+      "int_match_${indices}" expression => regextract("${key}\s*${key_value_separator}\s*([0-9]+)", "${lines[${indices}]}", "int_${indices}"),
+        ifvarclass => "key_found_${indices}";
+      "is_in_range_${indices}" expression => and(islessthan("${min}", "${int_${indices}[1]}"), isgreaterthan("${max}", "${int_${indices}[1]}")),
+        ifvarclass => "int_match_${indices}";
+
+      "failed" expression => or("failed", and("key_found_${indices}", "!is_in_range_${indices}"));
+
+  methods:
+    keys_found.!failed::
+      "success class" usebundle  => _classes_success("${old_class_prefix}");
+      "success class" usebundle  => _classes_success("${class_prefix}");
+    !keys_found|failed::
+      "error_class"   usebundle => _classes_failure("${old_class_prefix}");
+      "error_class"   usebundle => _classes_failure("${class_prefix}");
+
+    pass2.keys_found::
+      "report"   usebundle => _log_v3("${report_string}Verify that parameters in lines ${key} ${key_value_separator} values in ${file} is in the range ${min}-${max}", "${file}", "${old_class_prefix}", "${class_prefix}", @{args});
+    pass2.!keys_found::
+      "report"   usebundle => _log_v3("No lines found corresponding to the given key, verify that parameters in lines ${key} ${key_value_separator} values in ${file} is in the range ${min}-${max}", "${file}", "${old_class_prefix}", "${class_prefix}", @{args});
+
+  reports:
+   "${lines[${indices}]}"
+     ifvarclass => "key_found_${indices}";
+}
