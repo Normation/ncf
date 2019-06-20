@@ -32,7 +32,7 @@ bundle agent init
        "unknown_service_name"  string => "unknown";
 
   classes:
-    redhat|suse::
+    redhat|suse|sles::
       "enabled" expression => returnszero("chkconfig ${service_name} off", "useshell");
     debian::
       "enabled" expression => returnszero("update-rc.d ${service_name} disable", "useshell");

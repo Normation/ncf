@@ -24,7 +24,7 @@ bundle agent init
   vars:
     ubuntu::
       "service_name"  string => "ntp";
-    (debian|suse).!ubuntu::
+    (debian|suse|sles).!ubuntu::
       "service_name"  string => "cron";
     redhat::
       "service_name"  string => "crond";
@@ -34,7 +34,7 @@ bundle agent init
   classes:
     debian::
       "enabled" expression => returnszero("update-rc.d ${service_name} disable", "useshell");
-    redhat|suse::
+    redhat|suse|sles::
       "enabled" expression => returnszero("chkconfig ${service_name} off", "useshell");
 }
 

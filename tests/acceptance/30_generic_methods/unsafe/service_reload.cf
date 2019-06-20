@@ -27,7 +27,7 @@ bundle agent init
       "service_script" string => "crond";
     aix::
       "service_script" string => "syslogd";
-    debian|suse::
+    debian|suse|sles::
       "service_script" string => "cron";
 }
 

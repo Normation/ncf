@@ -32,7 +32,7 @@ bundle agent init
 
   commands:
     # To ensure that the default primary group is a new group based on the user name
-    suse::
+    suse|sles::
      "/usr/bin/sed -i 's/USERGROUPS_ENAB no/USERGROUPS_ENAB yes/g' /etc/login.defs";
 }
 

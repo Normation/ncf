@@ -30,7 +30,7 @@ bundle agent init
       "service_name"  string => "ntp";
 
   classes:
-    redhat|suse::
+    redhat|suse|sles::
       "enabled" expression => returnszero("chkconfig ${service_name} on", "useshell");
     debian::
       "enabled" expression => returnszero("update-rc.d ${service_name} enable", "useshell");
