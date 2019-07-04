@@ -24,6 +24,10 @@ bundle agent init
   vars:
     "command_0"            string => "exit 0";
     "canonified_command_0" string => canonify("${command_name}");
+
+    "file_name"                     string => execresult("echo $RANDOM", "useshell");
+    "audit_command_line"            string => "touch ${file_name} &&";
+    "canonified_audit_command_name" string => canonify("${audit_command_line}");
 }
 
 #######################################################
@@ -40,12 +44,23 @@ bundle agent test
     "phC" usebundle => command_execution_result("exit 3", "${kept_codes}", "${repaired_codes}");
     "phD" usebundle => command_execution_result("exit 4", "${kept_codes}", "${repaired_codes}");
     "phE" usebundle => command_execution_result("exit 5", "${kept_codes}", "${repaired_codes}");
+
+    "enable" usebundle => set_dry_run_mode("true");
+    "phF" usebundle => command_execution_result("${init.audit_command_line} exit 0", "${kept_codes}", "${repaired_codes}");
+    "phG" usebundle => command_execution_result("${init.audit_command_line} exit 2", "${kept_codes}", "${repaired_codes}");
+    "phH" usebundle => command_execution_result("${init.audit_command_line} exit 3", "${kept_codes}", "${repaired_codes}");
+    "phI" usebundle => command_execution_result("${init.audit_command_line} exit 4", "${kept_codes}", "${repaired_codes}");
+    "phJ" usebundle => command_execution_result("${init.audit_command_line} exit 5", "${kept_codes}", "${repaired_codes}");
+    "disable" usebundle => set_dry_run_mode("false");
 }
 
 #######################################################
 
 bundle agent check
 {
+  vars:
+    "audit_report" string => "command_execution_result_${init.canonified_audit_command_name}_exit";
+
   classes:
     "ok_A" expression => "command_execution_result_exit_0_kept.!command_execution_result_exit_0_repaired.!command_execution_result_exit_0_error";
     "ok_B" expression => "command_execution_result_exit_2_kept.!command_execution_result_exit_2_repaired.!command_execution_result_exit_2_error";
@@ -53,7 +68,17 @@ bundle agent check
     "ok_D" expression => "!command_execution_result_exit_4_kept.command_execution_result_exit_4_repaired.!command_execution_result_exit_4_error";
     "ok_E" expression => "!command_execution_result_exit_5_kept.!command_execution_result_exit_5_repaired.command_execution_result_exit_5_error";
 
-    "ok"  expression => "ok_A.ok_B.ok_C.ok_D.ok_E";
+
+    "file_exists" expression => fileexists("${init.file_name}");
+    "ok_F" expression => "!${audit_report}_0_kept.!${audit_report}_0_repaired.${audit_report}_0_error";
+    "ok_G" expression => "!${audit_report}_2_kept.!${audit_report}_2_repaired.${audit_report}_2_error";
+    "ok_H" expression => "!${audit_report}_3_kept.!${audit_report}_3_repaired.${audit_report}_3_error";
+    "ok_I" expression => "!${audit_report}_4_kept.!${audit_report}_4_repaired.${audit_report}_4_error";
+    "ok_J" expression => "!${audit_report}_5_kept.!${audit_report}_5_repaired.${audit_report}_5_error";
+
+    "enforce_ok"  expression => "ok_A.ok_B.ok_C.ok_D.ok_E";
+    "audit_ok"    expression => "ok_F.ok_G.ok_H.ok_I.ok_J.!file_exists";
+    "ok"          expression => "enforce_ok.audit_ok";
 
   reports:
     ok::

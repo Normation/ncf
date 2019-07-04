@@ -23,6 +23,7 @@
 # * If the exit code is in the `true_codes` list, this will produce a kept outcome class and a `${condition_prefix}_true` condition
 # * If the exit code is in the `false_codes` list, this will produce a repaired outcome class and a `${condition_prefix}_false` condition
 # * If the exit code is not in the list, or if the command is not present, this will produce an error outcome class and no classes with `${condition_prefix}`
+# * In audit mode no condition will be defined and an error outcome class will be defined since we can not know what the command result could be.
 #
 # The created condition is global to the agent.
 #

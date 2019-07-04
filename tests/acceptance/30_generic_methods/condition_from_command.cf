@@ -41,6 +41,14 @@ bundle agent test
     "phE" usebundle => condition_from_command("classE", "exit 5", "${true_codes}", "${false_codes}"); # error
     "phF" usebundle => condition_from_command("classF", "${init.very_long_command}", "${true_codes}", "${false_codes}"); # true
 
+    "enable" usebundle => set_dry_run_mode("true");
+    "phG" usebundle => condition_from_command("classG", "exit 0", "${true_codes}", "${false_codes}"); # error  
+    "phH" usebundle => condition_from_command("classH", "exit 2", "${true_codes}", "${false_codes}"); # error 
+    "phI" usebundle => condition_from_command("classI", "exit 3", "${true_codes}", "${false_codes}"); # error 
+    "phJ" usebundle => condition_from_command("classJ", "exit 4", "${true_codes}", "${false_codes}"); # error 
+    "phK" usebundle => condition_from_command("classK", "exit 5", "${true_codes}", "${false_codes}"); # error 
+    "phL" usebundle => condition_from_command("classL", "${init.very_long_command}", "${true_codes}", "${false_codes}"); # true
+    "disable" usebundle => set_dry_run_mode("false");
 }
 
 #######################################################
@@ -55,7 +63,17 @@ bundle agent check
     "ok_E" expression => "!condition_from_command_classE_kept.!condition_from_command_classE_repaired.condition_from_command_classE_error.!classE_true.!classE_false";
     "ok_F" expression => "condition_from_command_classF_kept.!condition_from_command_classF_repaired.!condition_from_command_classF_error.classA_true.!classF_false";
 
-    "ok"  expression => "ok_A.ok_B.ok_C.ok_D.ok_E.ok_F";
+    # No classes are defined in audit mode since we do not execute the command
+    "ok_G" expression => "!condition_from_command_classG_kept.!condition_from_command_classG_repaired.condition_from_command_classG_error.!classG_true.!classG_false";
+    "ok_H" expression => "!condition_from_command_classH_kept.!condition_from_command_classH_repaired.condition_from_command_classH_error.!classH_true.!classH_false";
+    "ok_I" expression => "!condition_from_command_classI_kept.!condition_from_command_classI_repaired.condition_from_command_classI_error.!classI_true.!classI_false";
+    "ok_J" expression => "!condition_from_command_classJ_kept.!condition_from_command_classJ_repaired.condition_from_command_classJ_error.!classJ_true.!classJ_false";
+    "ok_K" expression => "!condition_from_command_classK_kept.!condition_from_command_classK_repaired.condition_from_command_classK_error.!classK_true.!classK_false";
+    "ok_L" expression => "!condition_from_command_classL_kept.!condition_from_command_classL_repaired.condition_from_command_classL_error.!classL_true.!classL_false";
+
+    "enforce_ok"  expression => "ok_A.ok_B.ok_C.ok_D.ok_E.ok_F";
+    "audit_ok"    expression => "ok_G.ok_H.ok_I.ok_J.ok_K.ok_L";
+    "ok"          expression => "enforce_ok.audit_ok";
 
   reports:
     ok::

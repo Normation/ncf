@@ -32,6 +32,11 @@ bundle agent test
     "ph1"         usebundle => condition_from_expression("class1", "any");
     "ph2"         usebundle => condition_from_expression("class2", "!any");
 
+    "enable"      usebundle => set_dry_run_mode("true");
+    "ph3"         usebundle => condition_from_expression("class3", "any");
+    "ph4"         usebundle => condition_from_expression("class4", "!any");
+    "disable"     usebundle => set_dry_run_mode("false");
+
 }
 
 #######################################################
@@ -39,10 +44,16 @@ bundle agent test
 bundle agent check
 {
   classes:
-      "ok_class1"  expression => "condition_from_expression_class1_ok.class1_true";
-      "ok_class2"  expression => "condition_from_expression_class2_ok.class2_false";
+      "ok_class1"  expression => "condition_from_expression_class1_ok.class1_true.!condition_from_expression_class1_error.!condition_from_expression_class1_repaired";
+      "ok_class2"  expression => "condition_from_expression_class2_ok.class2_false.!condition_from_expression_class2_error.!condition_from_expression_class2_repaired";
 
-      "ok"         expression => "ok_class1.ok_class2";
+      "ok_class3"  expression => "condition_from_expression_class3_ok.class3_true.!condition_from_expression_class3_error.!condition_from_expression_class3_repaired";
+      "ok_class4"  expression => "condition_from_expression_class4_ok.class4_false.!condition_from_expression_class4_error.!condition_from_expression_class4_repaired";
+
+      "enforce_ok" expression => "ok_class1.ok_class2";
+      "audit_ok"   expression => "ok_class3.ok_class4";
+
+      "ok"         expression => "enforce_ok.audit_ok";
 
   reports:
     ok::

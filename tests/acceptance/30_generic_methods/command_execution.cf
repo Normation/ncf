@@ -24,6 +24,10 @@ bundle agent init
   vars:
     "command_name"            string => "/bin/date | egrep '[0-9]'";
     "canonified_command_name" string => canonify("${command_name}");
+
+    "file_name"                     string => execresult("echo $RANDOM", "useshell");
+    "audit_command_name"            string => "touch ${file_name}";
+    "canonified_audit_command_name" string => canonify("${audit_command_name}");
 }
 
 #######################################################
@@ -32,6 +36,10 @@ bundle agent test
 {
   methods:
     "ph1" usebundle => command_execution("${init.command_name}");
+
+    "enable" usebundle => set_dry_run_mode("true");
+    "ph1" usebundle => command_execution("${init.audit_command_name}");
+    "disable" usebundle => set_dry_run_mode("false");
 }
 
 #######################################################
@@ -39,7 +47,12 @@ bundle agent test
 bundle agent check
 {
   classes:
-    "ok" expression => "command_execution_${init.canonified_command_name}_ok.!command_execution_${init.canonified_command_name}_error";
+    "enforce_ok" expression => "command_execution_${init.canonified_command_name}_ok.!command_execution_${init.canonified_command_name}_error";
+    
+    "file_exists" expression => fileexists("${init.file_name}");
+    "audit_ok" expression => "command_execution_${init.canonified_audit_command_name}_error.!command_execution_${init.canonified_audit_command_name}_repaired.!command_execution_${init.canonified_audit_command_name}_ok.!file_exists";
+
+    "ok" expression => "enforce_ok.audit_ok";
 
   reports:
     ok::
