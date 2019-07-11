@@ -1,0 +1,87 @@
+#####################################################################################
+# Copyright 2019 Normation SAS
+#####################################################################################
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, Version 3.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#
+#####################################################################################
+
+# @name File line check present
+# @description Check if all files in the given path contains at least one line matching the expected regex
+#
+# @documentation Check if all files in the given path contains at least one line matching the expected regex
+#
+# * The path can contains globbing expression, it will test all files matching the glob.
+# * The globbing is **not recursive** and only plain files and symlink to plain files will be checked.
+# * The pattern should **match the entire line** and respect the PCRE syntax.
+# * If no files are found in the given path, it will report an error
+#
+# #### Example:
+#
+# If we want to check that a file contains a line containing the word *word*, we will use the pattern `.*word.*`
+#
+# @parameter path  File name (absolute path on the target node, support globbing)
+# @parameter regex Pattern tested on each line
+#
+# @class_prefix file_line_check_present
+# @class_parameter path
+
+bundle agent file_line_check_present(path, regex)
+{
+  vars:
+      "old_class_prefix"        string => canonify("file_line_check_present_${path}");
+
+      "args"                     slist => { "${path}", "${regex}" };
+      "report_param"            string => join("_", args);
+      "full_class_prefix"       string => canonify("file_line_check_present_${report_param}");
+      "class_prefix"            string => string_head("${full_class_prefix}", "1000");
+
+      "full_inner_class_prefix" string => canonify("file_line_check_present_${report_param}_false");
+      "inner_class_prefix"      string => string_head("${full_inner_class_prefix}", "1000");
+
+      "file_list"                           slist  => findfiles("${path}");
+      "file_list_length"                    int    => length("file_list");
+      "file_array[${file_list}]"            string => "${file_list}";
+      "canonified_file_array[${file_list}]" string => canonify("${file_array[${file_list}]}");
+
+  classes:
+      "pass1" expression => "any";
+      "pass2" expression => "pass1";
+      "pass3" expression => "pass2";
+
+    pass2::
+      "files_found" expression => isgreaterthan("${file_list_length}", "0");
+
+      "path_exists_${canonified_file_array[${file_list}]}"  expression => and(fileexists("${file_list}"), or(isplain("${file_list}"), islink("${file_list}")));
+      "matches_line_${canonified_file_array[${file_list}]}" expression => regline("${regex}", "${file_list}"),
+        ifvarclass => "path_exists_${canonified_file_array[${file_list}]}";
+
+      "match_not_found"    not => "matches_line_${canonified_file_array[${file_list}]}";
+      "path_found"  expression => "path_exists_${canonified_file_array[${file_list}]}";
+
+  methods:
+    pass3.(match_not_found|!path_found)::
+      "failure" usebundle => _classes_failure("${old_class_prefix}");
+      "failure" usebundle => _classes_failure("${class_prefix}");
+
+    pass3.!match_not_found.path_found::
+      "success" usebundle => _classes_success("${old_class_prefix}");
+      "success" usebundle => _classes_success("${class_prefix}");
+
+    pass3.path_found::
+      "report" usebundle => _log_v3("Checking that all files in ${path} contain at least one line matching ${regex}", "${path}", "${old_class_prefix}", "${class_prefix}", @{args});
+    pass3.!path_found::
+      "report" usebundle => _log_v3("Could not find any files corresponding to ${path} to check that it contains at least one line matching ${regex}", "${path}", "${old_class_prefix}", "${class_prefix}", @{args});
+
+}
+
