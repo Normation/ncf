@@ -1,0 +1,54 @@
+# @name Kernel module disabled at boot
+# @description Ensure that a given kernel module is disabled and loaded on the system
+# @documentation Ensure that a given kernel module is disabled and loaded on the system.
+#  If the module is not disabled, Rudder will create its install conf in /etc/modprobe.d/manage_by_rudder.conf.
+#  Which means that it will redirect the module loading to /bin/false, preventing its loading and the load of
+#  any module which depends on this one.
+#
+#
+# @parameter module_name Complete name of the kernel module, as seen by lsmod or listed in /proc/modules
+#
+# @class_prefix kernel_module_disabled_at_boot
+# @class_parameter module_name
+
+
+bundle agent kernel_module_disabled_at_boot(module_name)
+{
+  vars:
+      "modprobe_dir"            string => "/etc/modprobe.d";
+
+      "old_class_prefix"        string => canonify("variable_module_disabled_at_boot_${module_name}");
+      "args"                     slist => { "${module_name}", "${configuration}" };
+      "report_param"            string => join("_", args);
+      "full_class_prefix"       string => canonify("kernel_module_disabled_at_boot_${report_param}");
+      "old_class_prefix"        string => string_head("${full_class_prefix}", "1000");
+      "class_prefix"            string => string_head("${full_class_prefix}", "1000");
+
+      "configuration"           string => "install ${module_name} /bin/true";
+
+      "inner_args"               slist => { "${modprobe_dir}/manage_by_rudder.conf", "### ${module_name} start section", "### ${module_name} end section", "${configuration}" };
+      "report_inner_param"      string => join("_", inner_args);
+      "inner_class_prefix"      string => string_head(canonify("file_block_present_in_section_${report_inner_param}"), "1000");
+
+
+  classes:
+      "pass3" expression => "pass2";
+      "pass2" expression => "pass1";
+      "pass1" expression => "any";
+
+    # When info/warning will be available easily, make warnings if another file loads it, or if the module is not loaded.
+
+  methods:
+    pass1.!pass2::
+    # /etc/modprobe.d syntax is: options module_name parameter_name=parameter_value
+     "disable_reporting_${class_prefix}"    usebundle => disable_reporting;
+     "edit_modprobe_config_${class_prefix}" usebundle => file_block_present_in_section("${modprobe_dir}/manage_by_rudder.conf", "### ${module_name} start section", "### ${module_name} end section", "${configuration}");
+
+      "reenable_reporting_${class_prefix}"  usebundle => enable_reporting;
+
+    pass3::
+      "result_classes"     usebundle => _classes_copy("${inner_class_prefix}", "${class_prefix}");
+      "old_result_classes" usebundle => _classes_copy("${inner_class_prefix}", "${old_class_prefix}");
+
+      "report"             usebundle => _log_v3("Ensure that the kernel module ${module_name} is disabled on the system", "${module_name}", "${old_class_prefix}", "${class_prefix}", @{args});
+}
