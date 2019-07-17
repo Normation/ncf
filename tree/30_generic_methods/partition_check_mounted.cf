@@ -1,0 +1,64 @@
+#####################################################################################
+# Copyright 2019 Normation SAS
+#####################################################################################
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, Version 3.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#
+#####################################################################################
+
+# @name Partition check mounted
+# @description Checks if a given mount point exists
+# @documentation This bundle will define a condition `partition_check_mounted_${mount_point}_{ok, reached, kept}` if the
+# partition exists, or `partition_check_mounted_${mount_point}_{not_ok, reached, not_kept, failed}` if
+# the partition doesn't exists or is not mounted.
+#
+# @parameter mount_point Mount point path (absolute mount path on the target node)
+# 
+# @class_prefix mount_point
+# @class_parameter mount_point
+
+bundle agent partition_check_mounted(mount_point)
+{
+  vars:
+      "canonified_mount_point" string => canonify("${mount_point}");
+      "old_class_prefix"       string => canonify("partition_check_mounted_${mount_point}");
+      "args"                    slist => { "${mount_point}" };
+      "report_param"           string => join("_", args);
+      "full_class_prefix"      string => canonify("partition_check_mounted_${report_param}");
+      "class_prefix"           string => string_head("${full_class_prefix}", "1000");
+
+  classes:
+      "pass3"              expression => "pass2";
+      "pass2"              expression => "pass1";
+      "pass1"              expression => "any";
+
+    pass2.!pass3::
+      "${canonified_mount_point}" expression => returnszero("/bin/findmnt -M ${mount_point}", "useshell");
+
+  methods:
+    pass3::
+      "not_mounted_${canonified_mount_point}" usebundle => _classes_failure("${old_class_prefix}"),
+        ifvarclass => "!${canonified_mount_point}";
+      "not_mounted_${canonified_mount_point}" usebundle => _classes_failure("${class_prefix}"),
+        ifvarclass => "!${canonified_mount_point}";
+
+      "mounted_${canonified_mount_point}" usebundle => _classes_success("${old_class_prefix}"),
+        ifvarclass => "${canonified_mount_point}";
+      "mounted_${canonified_mount_point}" usebundle => _classes_success("${class_prefix}"),
+        ifvarclass => "${canonified_mount_point}";
+
+  methods:
+    pass3::
+      "report" usebundle => _log_v3("Check if mount point ${mount_point} exists and is mounted", "${mount_point}", "${old_class_prefix}", "${class_prefix}", @{args});
+
+}
