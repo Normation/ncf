@@ -1,0 +1,81 @@
+#####################################################################################
+# Copyright 2019 Normation SAS
+#####################################################################################
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, Version 3.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#
+#####################################################################################
+
+# @name Partition check options
+# @description Checks if a given mount point exists
+# @documentation This bundle will define a condition `partition_check_options_${mount_point}_{ok, reached, kept}` if the
+# partition exists, or `partition_check_options_${mount_point}_{not_ok, reached, not_kept, failed}` if
+# the partition is not mounted or its options are not correct.
+#
+# @parameter mount_point Mount point path (absolute mount path on the target node)
+# @parameter options Options expected on the mounted partition
+# 
+# @class_prefix mount_point
+# @class_parameter mount_point
+
+bundle agent partition_check_options(mount_point, options)
+{
+  vars:
+      "canonified_mount_point" string => canonify("${mount_point}");
+      "old_class_prefix"       string => canonify("partition_check_options_${mount_point}");
+      "args"                    slist => { "${mount_point}", "${options}" };
+      "report_param"           string => join("_", args);
+      "full_class_prefix"      string => canonify("partition_check_options_${report_param}");
+      "class_prefix"           string => string_head("${full_class_prefix}", "1000");
+
+
+    mounted::
+      "json_data" data => parsejson(execresult("/bin/findmnt -JM ${mount_point}", "useshell"));
+      "current_options" slist => splitstring("${json_data[filesystems][0][options]}", ",","999999999");
+      "found_options" string => join(",", "current_options");
+
+      "expected_options" slist => splitstring("${options}", ",", "999999999");
+      "diff_1" slist => difference("expected_options", "current_options");
+      "diff_2" slist => difference("current_options", "expected_options");
+
+  classes:
+      "pass3"              expression => "pass2";
+      "pass2"              expression => "pass1";
+      "pass1"              expression => "any";
+
+      "mounted" expression => returnszero("/bin/findmnt -M ${mount_point}", "useshell");
+
+    mounted.pass2::
+      "not_current_include_expected_${canonified_mount_point}" not => strcmp("", "${diff_1}");
+      "not_expected_include_current_${canonified_mount_point}" not => strcmp("", "${diff_2}");
+      "same_options_${canonified_mount_point}" expression => "!not_current_include_expected_${canonified_mount_point}.!not_expected_include_current_${canonified_mount_point}";
+
+  methods:
+    pass3::
+      "not_options_${canonified_mount_point}" usebundle => _classes_failure("${old_class_prefix}"),
+        ifvarclass => "!same_options_${canonified_mount_point}";
+      "not_options_${canonified_mount_point}" usebundle => _classes_failure("${class_prefix}"),
+        ifvarclass => "!same_options_${canonified_mount_point}";
+
+      "options_${canonified_mount_point}" usebundle => _classes_success("${old_class_prefix}"),
+        ifvarclass => "same_options_${canonified_mount_point}";
+      "options_${canonified_mount_point}" usebundle => _classes_success("${class_prefix}"),
+        ifvarclass => "same_options_${canonified_mount_point}";
+
+  methods:
+    pass3.mounted::
+      "report" usebundle => _log_v3("Check if mount options of ${mount_point} matches (${options}), found (${found_options})", "${mount_point}", "${old_class_prefix}", "${class_prefix}", @{args});
+    pass3.!mounted::
+      "report" usebundle => _log_v3("Mount point ${mount_point} could not be found. Check if mount options of ${mount_point} matches (${options})", "${mount_point}", "${old_class_prefix}", "${class_prefix}", @{args});
+}
+
