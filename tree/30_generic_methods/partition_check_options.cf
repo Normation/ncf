@@ -78,4 +78,3 @@ bundle agent partition_check_options(mount_point, options)
     pass3.!mounted::
       "report" usebundle => _log_v3("Mount point ${mount_point} could not be found. Check if mount options of ${mount_point} matches (${options})", "${mount_point}", "${old_class_prefix}", "${class_prefix}", @{args});
 }
-
