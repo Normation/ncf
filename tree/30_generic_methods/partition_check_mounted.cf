@@ -18,9 +18,21 @@
 
 # @name Partition check mounted
 # @description Checks if a given mount point exists
-# @documentation This bundle will define a condition `partition_check_mounted_${mount_point}_{ok, reached, kept}` if the
-# partition exists, or `partition_check_mounted_${mount_point}_{not_ok, reached, not_kept, failed}` if
+# @documentation This generic method check that a given path is a single mounted point
 # the partition doesn't exists or is not mounted.
+#
+# It uses the command findmnt to check for mounted options, which should already be available on most Linux
+# distributions.
+#
+#
+# The method will report a `success`:
+#
+# * If the given path correspond to a single mount point
+#
+# And an `error`:
+#
+# * if the path given does is not a mount point
+# * or if the command findmnt is not found in /mnt
 #
 # @parameter mount_point Mount point path (absolute mount path on the target node)
 # 
@@ -42,23 +54,26 @@ bundle agent partition_check_mounted(mount_point)
       "pass2"              expression => "pass1";
       "pass1"              expression => "any";
 
-    pass2.!pass3::
+      "findmnt_found"      expression => isexecutable("/bin/findmnt");
+    findmnt_found.pass2.!pass3::
       "${canonified_mount_point}" expression => returnszero("/bin/findmnt -M ${mount_point}", "useshell");
 
   methods:
     pass3::
       "not_mounted_${canonified_mount_point}" usebundle => _classes_failure("${old_class_prefix}"),
-        ifvarclass => "!${canonified_mount_point}";
+        ifvarclass => "!findmnt_found|!${canonified_mount_point}";
       "not_mounted_${canonified_mount_point}" usebundle => _classes_failure("${class_prefix}"),
-        ifvarclass => "!${canonified_mount_point}";
+        ifvarclass => "!findmnt_found|!${canonified_mount_point}";
 
+    pass3.findmnt_found::
       "mounted_${canonified_mount_point}" usebundle => _classes_success("${old_class_prefix}"),
         ifvarclass => "${canonified_mount_point}";
       "mounted_${canonified_mount_point}" usebundle => _classes_success("${class_prefix}"),
         ifvarclass => "${canonified_mount_point}";
 
-  methods:
-    pass3::
+    pass3.!findmnt_found::
+      "report" usebundle => _log_v3("Command findmnt not found in /bin, check if mount point ${mount_point} exists and is mounted", "${mount_point}", "${old_class_prefix}", "${class_prefix}", @{args});
+    pass3.findmnt_found::
       "report" usebundle => _log_v3("Check if mount point ${mount_point} exists and is mounted", "${mount_point}", "${old_class_prefix}", "${class_prefix}", @{args});
 
 }
