@@ -17,7 +17,7 @@
 #####################################################################################
 
 # @name Partition check options
-# @description Checks if a given mount point exists
+# @description Checks if a given mount point options are correct
 # @documentation This generic method will check that correct options are applied on a
 # given mount point.
 # It will never make modification to the node, it is only a `check` method.
