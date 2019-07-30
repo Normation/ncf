@@ -18,12 +18,42 @@
 
 # @name Partition check options
 # @description Checks if a given mount point exists
-# @documentation This bundle will define a condition `partition_check_options_${mount_point}_{ok, reached, kept}` if the
-# partition exists, or `partition_check_options_${mount_point}_{not_ok, reached, not_kept, failed}` if
-# the partition is not mounted or its options are not correct.
+# @documentation This generic method will check that correct options are applied on a
+# given mount point.
+# It will never make modification to the node, it is only a `check` method.
+#
+# It uses the command findmnt to check for mounted options, which should already be available on most Linux
+# distributions.
+#
+# The method will report a `success`:
+#
+# * if the partition options are correct
+# * which means that each options passed in parameters is included in the effective options.
+#
+# And an `error`:
+#
+# * If its options do not include the ones passed as parameters
+# * if the partition is not mounted
+# * or if the command findmnt is not found in /mnt
+#
+# ####Example:
+# If we have a root partition mounted like this:
+# ```
+# root@server# findmnt -M /
+# TARGET SOURCE                             FSTYPE OPTIONS
+# /      /dev/mapper/debian--9--64--vg-root ext4   rw,relatime,errors=remount-ro,data=ordered
+# ```
+# And we apply this generic method with the following parameters:
+# 
+# * `mount_point` = /
+# * `options` = relatime,rw, data=ordered
+#
+# It will report a success.
+#
+# If you only want to check that a partition is mounted, please use `partition_check_mounted` instead.
 #
 # @parameter mount_point Mount point path (absolute mount path on the target node)
-# @parameter options Options expected on the mounted partition
+# @parameter options Comma separated list of the expected options (ex: rw,relatime)
 # 
 # @class_prefix mount_point
 # @class_parameter mount_point
@@ -43,38 +73,45 @@ bundle agent partition_check_options(mount_point, options)
       "json_data" data => parsejson(execresult("/bin/findmnt -JM ${mount_point}", "useshell"));
       "current_options" slist => splitstring("${json_data[filesystems][0][options]}", ",","999999999");
       "found_options" string => join(",", "current_options");
+      "expected_options" slist => maplist(regex_replace("$(this)", " ", "", "g"), splitstring("${options}", ",", "999999999"));
 
-      "expected_options" slist => splitstring("${options}", ",", "999999999");
-      "diff_1" slist => difference("expected_options", "current_options");
-      "diff_2" slist => difference("current_options", "expected_options");
+      "diff_${canonified_mount_point}" slist => difference("expected_options", "current_options" );
 
   classes:
       "pass3"              expression => "pass2";
       "pass2"              expression => "pass1";
       "pass1"              expression => "any";
 
+      "findmnt_found"      expression => isexecutable("/bin/findmnt");
+    findmnt_found::
       "mounted" expression => returnszero("/bin/findmnt -M ${mount_point}", "useshell");
 
     mounted.pass2::
-      "not_current_include_expected_${canonified_mount_point}" not => strcmp("", "${diff_1}");
-      "not_expected_include_current_${canonified_mount_point}" not => strcmp("", "${diff_2}");
-      "same_options_${canonified_mount_point}" expression => "!not_current_include_expected_${canonified_mount_point}.!not_expected_include_current_${canonified_mount_point}";
+      # undefined if diff_${canonified_mount_point} is undefined, meaning that current_options include expected_options
+      "not_current_include_expected_${canonified_mount_point}" not => strcmp("", "${diff_${canonified_mount_point}}");
 
   methods:
+
     pass3::
       "not_options_${canonified_mount_point}" usebundle => _classes_failure("${old_class_prefix}"),
-        ifvarclass => "!same_options_${canonified_mount_point}";
+        ifvarclass => "!findmnt_found|not_current_include_expected_${canonified_mount_point}";
       "not_options_${canonified_mount_point}" usebundle => _classes_failure("${class_prefix}"),
-        ifvarclass => "!same_options_${canonified_mount_point}";
+        ifvarclass => "!findmnt_found|not_current_include_expected_${canonified_mount_point}";
 
+    pass3.findmnt_found::
       "options_${canonified_mount_point}" usebundle => _classes_success("${old_class_prefix}"),
-        ifvarclass => "same_options_${canonified_mount_point}";
+        ifvarclass => "!not_current_include_expected_${canonified_mount_point}";
       "options_${canonified_mount_point}" usebundle => _classes_success("${class_prefix}"),
-        ifvarclass => "same_options_${canonified_mount_point}";
+        ifvarclass => "!not_current_include_expected_${canonified_mount_point}";
 
   methods:
-    pass3.mounted::
+    pass3.!findmnt_found::
+      "report" usebundle => _log_v3("Command findmnt not found in /bin, check if mount options of ${mount_point} matches (${options})", "${mount_point}", "${old_class_prefix}", "${class_prefix}", @{args});
+    pass3.findmnt_found.mounted::
       "report" usebundle => _log_v3("Check if mount options of ${mount_point} matches (${options}), found (${found_options})", "${mount_point}", "${old_class_prefix}", "${class_prefix}", @{args});
-    pass3.!mounted::
+    pass3.findmnt_found.!mounted::
       "report" usebundle => _log_v3("Mount point ${mount_point} could not be found. Check if mount options of ${mount_point} matches (${options})", "${mount_point}", "${old_class_prefix}", "${class_prefix}", @{args});
+
+  reports:
+    "${diff_${canonified_mount_point}}";
 }
