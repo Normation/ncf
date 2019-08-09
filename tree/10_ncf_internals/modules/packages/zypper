@@ -89,11 +89,16 @@ def subprocess_Popen(cmd, stdout=None, stderr=None):
 
     return result
 
-
+# Pass stderr=subprocess.PIPE to report stderr in the command output
 def subprocess_call(cmd, stdout=None, stderr=None):
     process = subprocess_Popen(cmd, stdout, stderr)
-    return process.wait()
-
+    output, errors = process.communicate()
+    returncode = process.returncode
+    if stderr == subprocess.PIPE and errors:
+        for line in errors.splitlines():
+            sys.stdout.write("ErrorMessage=" + line + "\n")
+            sys.stdout.flush()
+    return (returncode, stdout, stderr)
 
 def get_package_data():
     pkg_string = ""
@@ -109,7 +114,7 @@ def get_package_data():
         # Absolute file.
         sys.stdout.write("PackageType=file\n")
         sys.stdout.flush()
-        return subprocess_call([rpm_cmd, "--qf", rpm_output_format, "-qp", pkg_string])
+        return subprocess_call([rpm_cmd, "--qf", rpm_output_format, "-qp", pkg_string], stderr=subprocess.PIPE)[1]
     elif re.search("[:,]", pkg_string):
         # Contains an illegal symbol.
         sys.stdout.write(line + "ErrorMessage: Package string with illegal format\n")
@@ -123,8 +128,7 @@ def get_package_data():
 def list_installed():
     # Ignore everything.
     sys.stdin.readlines()
-
-    return subprocess_call([rpm_cmd, "-qa", "--qf", rpm_output_format])
+    return subprocess_call([rpm_cmd, "-qa", "--qf", rpm_output_format], stderr=subprocess.PIPE)[1]
 
 
 def list_updates(online):
@@ -141,10 +145,10 @@ def list_updates(online):
 
 # Zypper's output looks like:
 #
-# S | Repository        | Name         | Current Version                    | Available Version                              | Arch  
+# S | Repository        | Name         | Current Version                    | Available Version                              | Arch
 # --+-------------------+--------------+------------------------------------+------------------------------------------------+-------
 # v | Rudder repository | rudder-agent | 1398866025:3.2.6.release-1.SLES.11 | 1398866025:3.2.7.rc1.git201609190419-1.SLES.11 | x86_64
-#    
+#
 # Which gives:
 #
 # v    | Rudder repository | rudder-agent       | 1398866025:3.2.6.release-1.SLES.11 | 1398866025:3.2.7.rc1.git201609190419-1.SLES.11 | x86_64
@@ -316,19 +320,19 @@ def repo_install():
         cmd_line = [zypper_cmd] + zypper_options + ["install"]
         cmd_line.extend(single_cmd_args)
 
-        ret = subprocess_call(cmd_line, stdout=NULLFILE)
+        ret = subprocess_call(cmd_line, stdout=NULLFILE, stderr=subprocess.PIPE)[0]
 
     if multi_cmd_args:
         for block in multi_cmd_args:
             # Try to upgrade.
             cmd_line = [zypper_cmd] + zypper_options + ["update"] + block
-            subprocess_call(cmd_line, stdout=NULLFILE)
+            subprocess_call(cmd_line, stdout=NULLFILE, stderr=subprocess.PIPE)
 
             # See if it succeeded.
             success = True
             for item in block:
                 cmd_line = [rpm_cmd] + rpm_quiet_option + ["-q", item]
-                if subprocess_call(cmd_line, stdout=NULLFILE) != 0:
+                if subprocess_call(cmd_line, stdout=NULLFILE, stderr=subprocess.PIPE)[0] != 0:
                     success = False
                     break
 
@@ -337,7 +341,7 @@ def repo_install():
 
             # Try to plain install.
             cmd_line = [zypper_cmd] + zypper_options + ["install"] + block
-            subprocess_call(cmd_line, stdout=NULLFILE)
+            subprocess_call(cmd_line, stdout=NULLFILE, stderr=subprocess.PIPE)[0]
 
             # No final check. CFEngine will figure out that it's missing
             # if it failed.
@@ -356,7 +360,7 @@ def remove():
     args = package_arguments_builder(False)[0]
 
     if args:
-        return subprocess_call(cmd_line + args, stdout=NULLFILE)
+        return subprocess_call(cmd_line + args, stdout=NULLFILE, stderr=subprocess.PIPE)[0]
     return 0
 
 
@@ -371,7 +375,7 @@ def file_install():
     if not found:
         return 0
 
-    return subprocess_call(cmd_line, stdout=NULLFILE)
+    return subprocess_call(cmd_line, stdout=NULLFILE, stderr=subprocess.PIPE)[0]
 
 
 def main():
