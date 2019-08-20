@@ -1,8 +1,25 @@
+#####################################################################################
+# Copyright 2019 Normation SAS
+#####################################################################################
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, Version 3.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#
+######################################################################################
+
 # @name Kernel module disabled at boot
-# @description Ensure that a given kernel module is disabled and loaded on the system
+# @description Ensure that a given kernel module is disabled at boot and loaded on the system
 # @documentation Ensure that a given kernel module is disabled and loaded on the system.
-#  If the module is not disabled, Rudder will create its install conf in /etc/modprobe.d/manage_by_rudder.conf.
-#  Which means that it will redirect the module loading to /bin/false, preventing its loading and the load of
+#  If the module is not disabled, Rudder will create its install conf in /etc/modprobe.d/manage_by_rudder.conf and redirect the module loading to /bin/false, preventing its loading and the load of
 #  any module which depends on this one.
 #
 #
@@ -25,8 +42,11 @@ bundle agent kernel_module_disabled_at_boot(module_name)
       "class_prefix"            string => string_head("${full_class_prefix}", "1000");
 
       "configuration"           string => "install ${module_name} /bin/true";
+      "conf_file"               string => "${modprobe_dir}/manage_by_rudder.conf";
+      "start_section"           string => "### ${module_name} start section";
+      "end_section"             string => "### ${module_name} end section";
 
-      "inner_args"               slist => { "${modprobe_dir}/manage_by_rudder.conf", "### ${module_name} start section", "### ${module_name} end section", "${configuration}" };
+      "inner_args"               slist => { "${conf_file}", "${start_section}", "${end_section}", "${configuration}" };
       "report_inner_param"      string => join("_", inner_args);
       "inner_class_prefix"      string => string_head(canonify("file_block_present_in_section_${report_inner_param}"), "1000");
 
@@ -41,8 +61,8 @@ bundle agent kernel_module_disabled_at_boot(module_name)
   methods:
     pass1.!pass2::
     # /etc/modprobe.d syntax is: options module_name parameter_name=parameter_value
-     "disable_reporting_${class_prefix}"    usebundle => disable_reporting;
-     "edit_modprobe_config_${class_prefix}" usebundle => file_block_present_in_section("${modprobe_dir}/manage_by_rudder.conf", "### ${module_name} start section", "### ${module_name} end section", "${configuration}");
+      "disable_reporting_${class_prefix}"    usebundle => disable_reporting;
+      "edit_modprobe_config_${class_prefix}" usebundle => file_block_present_in_section("${conf_file}", "${start_section}", "${end_section}", "${configuration}");
 
       "reenable_reporting_${class_prefix}"  usebundle => enable_reporting;
 
