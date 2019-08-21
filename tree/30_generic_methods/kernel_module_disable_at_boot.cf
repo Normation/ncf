@@ -17,10 +17,13 @@
 ######################################################################################
 
 # @name Kernel module disabled at boot
-# @description Ensure that a given kernel module is disabled at boot and loaded on the system
-# @documentation Ensure that a given kernel module is disabled and loaded on the system.
-#  If the module is not disabled, Rudder will create its install conf in /etc/modprobe.d/manage_by_rudder.conf and redirect the module loading to /bin/false, preventing its loading and the load of
-#  any module which depends on this one.
+# @description Ensure that a given kernel module is disabled at system boot
+# @documentation Ensure that a given kernel module is disabled at system boot and not loadable via modprobe.
+#  If the module is not disabled, Rudder will force its configuguration in /etc/modprobe.d/manage_by_rudder.conf to:
+#  `install <module_name> /bin/false`
+#
+#  It will prevents its loading and the load of any module which depends on this one via modprobe.
+#  This Generic Method will not unload the module if it is already loaded.
 #
 #
 # @parameter module_name Complete name of the kernel module, as seen by lsmod or listed in /proc/modules
