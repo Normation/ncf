@@ -41,7 +41,7 @@ bundle agent service_stop(service_name)
       "full_class_prefix"       string => canonify("service_stop_${service_name}");
       "class_prefix"            string => string_head("${full_class_prefix}", "1000");
 
-      "full_inner_class_prefix" string => canonify("service_action_${service_name}_stop");
+      "full_inner_class_prefix" string => canonify("${report_data.canonified_directive_id}_service_action_${service_name}_stop");
       "inner_class_prefix"      string => string_head("${full_inner_class_prefix}", "1000");
 
   classes:
@@ -51,7 +51,8 @@ bundle agent service_stop(service_name)
       "disable_reporting_${class_prefix}"
                    usebundle => disable_reporting;
 
-      "stop"       usebundle => service_action("${service_name}", "stop");
+      "stop"       usebundle => service_action("${service_name}", "stop"),
+                     comment => "${report_data.directive_id}";
 
       "reenable_reporting_${class_prefix}"
                    usebundle => enable_reporting,
@@ -61,6 +62,7 @@ bundle agent service_stop(service_name)
 
       "class copy" usebundle => _classes_copy("${inner_class_prefix}", "${class_prefix}");
 
-      "report"     usebundle => _log_v3("Stop service ${service_name}", "${service_name}", "${old_class_prefix}", "${class_prefix}", @{args});
+      "report"     usebundle => _log_v3("Stop service ${service_name}", "${service_name}", "${old_class_prefix}", "${class_prefix}", @{args}),
+                     comment => "${report_data.directive_id}";
 
 }

@@ -21,7 +21,7 @@
 # @action
 #
 # @parameter command_name  Command name
-# 
+#
 # @class_prefix command_execution
 # @class_parameter command_name
 
@@ -31,17 +31,24 @@ bundle agent command_execution(command_name)
       "old_class_prefix"  string => canonify("command_execution_${command_name}");
       "args"               slist => { "${command_name}" };
       "report_param"      string => join("_", args);
-      "full_class_prefix" string => canonify("command_execution_${report_param}");
+      "full_class_prefix" string => canonify("${report_data.canonified_directive_id}_command_execution_${report_param}");
       "class_prefix"      string => string_head("${full_class_prefix}", "1000");
 
+  classes:
+      "pass2" expression => "pass1";
+      "pass1" expression => "any";
   methods:
+    pass2::
       "report"
         usebundle  => _log_v3("Execute the command ${command_name}", "${command_name}", "${old_class_prefix}", "${class_prefix}", @{args}),
-        ifvarclass => "${old_class_prefix}_reached|${class_prefix}_reached";
+        ifvarclass => "${old_class_prefix}_reached|${class_prefix}_reached",
+        comment    => "${report_data.directive_id}";
 
   commands:
+    pass1::
       "${command_name}"
-        contain      => in_shell,
-        classes      => classes_generic_two("${old_class_prefix}", "${class_prefix}");
+        contain => in_shell,
+        classes => classes_generic_two("${old_class_prefix}", "${class_prefix}"),
+        comment => "${report_data.directive_id}";
 
 }

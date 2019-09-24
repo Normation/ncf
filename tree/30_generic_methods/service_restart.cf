@@ -35,7 +35,7 @@ bundle agent service_restart(service_name)
       "full_class_prefix"        string => canonify("service_restart_${service_name}");
       "class_prefix"             string => string_head("${full_class_prefix}", "1000");
 
-      "full_inner_class_prefix"  string => canonify("service_action_${service_name}_restart");
+      "full_inner_class_prefix"  string => canonify("${report_data.canonified_directive_id}_service_action_${service_name}_restart");
       "inner_class_prefix"       string => string_head("${full_inner_class_prefix}", "1000");
 
   classes:
@@ -52,5 +52,6 @@ bundle agent service_restart(service_name)
       # old_class_prefix in service_restart_if is the same as in service_restart
       "new result classes"    usebundle => _classes_copy("${inner_class_prefix}", "${class_prefix}");
 
-      "report"                usebundle => _log_v3("Restart service ${service_name}", "${service_name}", "${old_class_prefix}", "${class_prefix}", @{args});
+      "report"                usebundle => _log_v3("Restart service ${service_name}", "${service_name}", "${old_class_prefix}", "${class_prefix}", @{args}),
+                                comment => "${report_data.directive_id}";
 }

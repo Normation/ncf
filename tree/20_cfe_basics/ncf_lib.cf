@@ -1173,7 +1173,7 @@ bundle agent ncf_services(service, action)
       "canonified_action"         string => canonify("${action}");
       "canonified_action_command" string => canonify("${action_command}");
 
-      "class_prefix"  string => "ncf_services_${canonified_service}_${canonified_action}";
+      "class_prefix"  string => "${report_data.canonified_directive_id}_ncf_services_${canonified_service}_${canonified_action}";
 
   defaults:
       # status is an alias to is-active (in systemd, it is not the same thing the only difference is the output, which is not kept anyway)
@@ -1209,7 +1209,8 @@ bundle agent ncf_services(service, action)
 
       # Due to lack of integration between upstart and init scripts, we have to make different cases.
       "is_upstart_service"         not => returnszero("/sbin/initctl status ${service} 2>&1 | ${paths.path[grep]} -E 'Unknown job|Unable to connect to Upstart' > /dev/null", "useshell"),
-                            ifvarclass => "ubuntu.initctl_utility_present";
+                            ifvarclass => "ubuntu.initctl_utility_present",
+                            comment    => "${report_data.directive_id}";
 
       # Due to compatibility issues when mixing init.d/service and systemctl calls, we use the init script when present
       "is_init_service"     expression => fileexists("/etc/init.d/${service}");
@@ -1221,7 +1222,8 @@ bundle agent ncf_services(service, action)
     # Actual command - for checks on non-windows systems
     #####
     pass1.is_check_action.!windows.!is_process_action.method_found.!(slackware.is_boot_action)::
-      "action_ok" expression => returnszero("${action_command} 2>&1 > /dev/null", "useshell");
+      "action_ok" expression => returnszero("${action_command} 2>&1 > /dev/null", "useshell"),
+                  comment    => "${report_data.directive_id}";
 
     any::
       "pass3" expression => "pass2";
@@ -1252,7 +1254,8 @@ bundle agent ncf_services(service, action)
                               ifvarclass => "${class_prefix}_checked_ok";
     # Slackware boot actions
     pass2.slackware.is_boot_action::
-      "action"  usebundle => slackware_boot_services("${service}", "${action}", "${class_prefix}");
+      "action"  usebundle => slackware_boot_services("${service}", "${action}", "${class_prefix}"),
+                  comment => "${report_data.directive_id}";
   processes:
 
     ###########################################################################
@@ -1279,17 +1282,20 @@ bundle agent ncf_services(service, action)
     windows.is_valid_action.!is_restart_action::
       "${service}"
         service_policy => "${action}",
-        classes        => classes_generic("${class_prefix}");
+        classes        => classes_generic("${class_prefix}"),
+        comment => "${report_data.directive_id}";
 
     windows.is_restart_action::
       "${service}"
         service_policy => "stop",
-        classes        => classes_generic("${class_prefix}_stop_service");
+        classes        => classes_generic("${class_prefix}_stop_service"),
+        comment => "${report_data.directive_id}";
 
       "${service}"
         service_policy => "start",
         classes        => classes_generic("${class_prefix}"),
-        ifvarclass     => "${class_prefix}_stop_service_ok";
+        ifvarclass     => "${class_prefix}_stop_service_ok",
+        comment => "${report_data.directive_id}";
 
   commands:
     #####
@@ -1302,7 +1308,8 @@ bundle agent ncf_services(service, action)
     pass2.!is_check_action.!windows.!is_process_action.method_found.!(slackware.is_boot_action)::
       "${action_command}"
         contain => in_shell_and_silent,
-        classes => classes_generic("${class_prefix}");
+        classes => classes_generic("${class_prefix}"),
+        comment => "${report_data.directive_id}";
 
   reports:
 

@@ -21,13 +21,13 @@
 # @action
 # @documentation Execute a command and create result conditions
 # depending on the exit codes given in parameters.
-# If an exit code is not in the list it will lead to an error status. 
+# If an exit code is not in the list it will lead to an error status.
 # If you want 0 to be a success you have to list it in the kept_codes list
 #
 # @parameter command        The command to run
 # @parameter kept_codes     List of codes that produce a kept status separated with commas (ex: 1,2,5)
 # @parameter repaired_codes List of codes that produce a repaired status separated with commas (ex: 3,4,6)
-# 
+#
 # @class_prefix command_execution_result
 # @class_parameter command
 
@@ -37,19 +37,27 @@ bundle agent command_execution_result(command, kept_codes, repaired_codes)
       "old_class_prefix"  string => canonify("command_execution_result_${command}");
       "args"               slist => { "${command}", "${kept_codes}", "${repaired_codes}" };
       "report_param"      string => join("_", args);
-      "full_class_prefix" string => canonify("command_execution_result_${report_param}");
+      "full_class_prefix" string => canonify("${report_data.canonified_directive_id}_command_execution_result_${report_param}");
       "class_prefix"      string => string_head("${full_class_prefix}", "1000");
 
       "kept_list"     slist => splitstring("${kept_codes}", "\s*,\s*", "256");
       "repaired_list" slist => splitstring("${repaired_codes}", "\s*,\s*", "256");
 
+  classes:
+      "pass2" expression => "pass1";
+      "pass1" expression => "any";
+
   methods:
+    pass2::
       "report"
         usebundle  => _log_v3("Execute the command ${command}", "${command}", "${old_class_prefix}", "${class_prefix}", @{args}),
-        ifvarclass => "${old_class_prefix}_reached|${class_prefix}_reached";
+        ifvarclass => "${old_class_prefix}_reached|${class_prefix}_reached",
+        comment    => "${report_data.directive_id}";
 
   commands:
+    pass1::
       "${command}"
-        contain      => in_shell,
-        classes      => classes_generic_return_code_list_two("${old_class_prefix}", "${class_prefix}", @{kept_list}, @{repaired_list});
+        contain => in_shell,
+        classes => classes_generic_return_code_list_two("${old_class_prefix}", "${class_prefix}", @{kept_list}, @{repaired_list}),
+        comment => "${report_data.directive_id}";
 }

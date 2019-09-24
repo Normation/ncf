@@ -20,7 +20,7 @@
 # @description Ensure that a service is stopped using the appropriate method
 #
 # @parameter service_name Service
-# 
+#
 # @class_prefix service_stopped
 # @class_parameter service_name
 
@@ -89,6 +89,7 @@ bundle agent service_stopped(service_name)
                            usebundle => enable_reporting,
                           ifvarclass => "should_report";
       "report"
-        usebundle  => _log_v3("Ensure that service ${service_name} is stopped", "${service_name}", "${old_class_prefix}", "${class_prefix}", @{args});
+        usebundle  => _log_v3("Ensure that service ${service_name} is stopped", "${service_name}", "${old_class_prefix}", "${class_prefix}", @{args}),
+                             comment => "${report_data.directive_id}";
 
 }

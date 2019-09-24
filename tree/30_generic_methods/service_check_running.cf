@@ -20,7 +20,7 @@
 # @description Check if a service is running using the appropriate method
 #
 # @parameter service_name  Process name
-# 
+#
 # @class_prefix service_check_running
 # @class_parameter service_name
 
@@ -36,7 +36,7 @@ bundle agent service_check_running(service_name)
       "full_class_prefix"       string => canonify("service_check_running_${report_param}");
       "class_prefix"            string => string_head("${full_class_prefix}", "1000");
 
-      "full_inner_class_prefix" string => canonify("ncf_services_${report_param}_is_active");
+      "full_inner_class_prefix" string => canonify("${report_data.canonified_directive_id}_ncf_services_${report_param}_is_active");
       "inner_class_prefix"      string => string_head("${full_inner_class_prefix}", "1000");
 
 
@@ -47,15 +47,17 @@ bundle agent service_check_running(service_name)
   methods:
       "disable_reporting_${class_prefix}"
                              usebundle => disable_reporting;
-      "check_active"         usebundle => ncf_services("${service_name}", "is-active");
+      "check_active"         usebundle => ncf_services("${service_name}", "is-active"),
+                               comment => "${report_data.directive_id}";
 
       "reenable_reporting_${class_prefix}"
                              usebundle => enable_reporting,
                             ifvarclass => "should_report";
-      "class copy"           usebundle => _classes_copy("ncf_services_${canonified_service_name}_is_active", "${old_class_prefix}"),
-                            ifvarclass => "ncf_services_${canonified_service_name}_is_active_reached";
+      "class copy"           usebundle => _classes_copy("${inner_class_prefix}", "${old_class_prefix}"),
+                            ifvarclass => "${inner_class_prefix}_reached";
       "new result classes"   usebundle => _classes_copy("${inner_class_prefix}", "${class_prefix}"),
                             ifvarclass => "${inner_class_prefix}_reached";
 
-      "report"             usebundle => _log_v3("Check if the service ${service_name} is started", "${service_name}", "${old_class_prefix}", "${class_prefix}", @{args});
+      "report"             usebundle => _log_v3("Check if the service ${service_name} is started", "${service_name}", "${old_class_prefix}", "${class_prefix}", @{args}),
+                             comment => "${report_data.directive_id}";
 }
