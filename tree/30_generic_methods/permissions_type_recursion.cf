@@ -33,10 +33,13 @@ bundle agent permissions_type_recursion(path, mode, owner, group, type, recursio
 {
   vars:
       "old_class_prefix"        string => canonify("permissions_${path}");
+      "uniq_old_class_prefix"   string => canonify("${report_data.directive_id}_permissions_${path}");
       "args"                     slist => { "${path}", "${mode}", "${owner}", "${group}", "${type}", "${recursion}" };
       "report_param"            string => join("_", args);
       "full_class_prefix"       string => canonify("permissions_${report_param}");
       "class_prefix"            string => string_head("${full_class_prefix}", "1000");
+      "uniq_full_class_prefix"  string => canonify("${report_data.directive_id}_${full_class_prefix}");
+      "uniq_class_prefix"       string => string_head("${uniq_full_class_prefix}", "1000");
 
   classes:
       "is_type_all"         expression => strcmp("${type}", "all");
@@ -57,14 +60,14 @@ bundle agent permissions_type_recursion(path, mode, owner, group, type, recursio
         create       => "false",
         perms        => mog("${mode}", "${owner}", "${group}"),
         depth_search => recurse_with_base("${recursion}"),
-        classes      => classes_generic_two("${old_class_prefix}", "${class_prefix}");
+        classes      => classes_generic_two("${uniq_old_class_prefix}", "${uniq_class_prefix}");
 
     is_type_all.((is_target_directory.is_depth_zero)|!is_target_directory)::
 
       "${path}"
         create       => "false",
         perms        => mog("${mode}", "${owner}", "${group}"),
-        classes      => classes_generic_two("${old_class_prefix}", "${class_prefix}");
+        classes      => classes_generic_two("${uniq_old_class_prefix}", "${uniq_class_prefix}");
 
     is_type_files.is_target_directory.!is_depth_zero::
 
@@ -73,7 +76,7 @@ bundle agent permissions_type_recursion(path, mode, owner, group, type, recursio
         perms        => mog("${mode}", "${owner}", "${group}"),
         depth_search => recurse("${recursion}"),
         file_select  => plain,
-        classes      => classes_generic_two("${old_class_prefix}", "${class_prefix}");
+        classes      => classes_generic_two("${uniq_old_class_prefix}", "${uniq_class_prefix}");
 
     is_type_files.((is_target_directory.is_depth_zero)|!is_target_directory)::
 
@@ -81,7 +84,7 @@ bundle agent permissions_type_recursion(path, mode, owner, group, type, recursio
         create       => "false",
         perms        => mog("${mode}", "${owner}", "${group}"),
         file_select  => plain,
-        classes      => classes_generic_two("${old_class_prefix}", "${class_prefix}");
+        classes      => classes_generic_two("${uniq_old_class_prefix}", "${uniq_class_prefix}");
 
     is_type_directories.is_target_directory.!is_depth_zero::
 
@@ -90,7 +93,7 @@ bundle agent permissions_type_recursion(path, mode, owner, group, type, recursio
         perms        => mog("${mode}", "${owner}", "${group}"),
         depth_search => recurse_with_base("${recursion}"),
         file_select  => dirs,
-        classes      => classes_generic_two("${old_class_prefix}", "${class_prefix}");
+        classes      => classes_generic_two("${uniq_old_class_prefix}", "${uniq_class_prefix}");
 
     is_type_directories.is_target_directory.is_depth_zero::
 
@@ -98,23 +101,25 @@ bundle agent permissions_type_recursion(path, mode, owner, group, type, recursio
         create       => "false",
         perms        => mog("${mode}", "${owner}", "${group}"),
         file_select  => dirs,
-        classes      => classes_generic_two("${old_class_prefix}", "${class_prefix}");
+        classes      => classes_generic_two("${uniq_old_class_prefix}", "${uniq_class_prefix}");
 
   methods:
 
     is_type_directories.!is_target_directory::
       "error report if target is a file and we manage directory"
-            usebundle => _classes_failure("${old_class_prefix}");
+            usebundle => _classes_failure("${uniq_old_class_prefix}");
       "error report if target is a file and we manage directory"
-            usebundle => _classes_failure("${class_prefix}");
+            usebundle => _classes_failure("${uniq_class_prefix}");
 
 
     !target_exists::
       "error report if target doesn't exist"
-        usebundle => _classes_failure("${old_class_prefix}");
+        usebundle => _classes_failure("${uniq_old_class_prefix}");
       "error report if target doesn't exist"
-        usebundle => _classes_failure("${class_prefix}");
+        usebundle => _classes_failure("${uniq_class_prefix}");
 
     any::
-      "report"             usebundle => _log_v3("Ensure permissions mode ${mode}, owner ${owner} and group ${group} on ${path} on type ${type} with ${recursion} recursion level", "${path}", "${old_class_prefix}", "${class_prefix}", @{args});
+      "old outcome classes" usebundle => _classes_copy("${uniq_class_prefix}", "${class_prefix}");
+      "old outcome classes" usebundle => _classes_copy("${uniq_old_class_prefix}", "${old_class_prefix}");
+      "report"              usebundle => _log_v3("Ensure permissions mode ${mode}, owner ${owner} and group ${group} on ${path} on type ${type} with ${recursion} recursion level", "${path}", "${uniq_old_class_prefix}", "${uniq_class_prefix}", @{args});
 }

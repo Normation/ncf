@@ -27,17 +27,24 @@
 bundle agent directory_present(target)
 {
   vars:
-      "old_class_prefix"  string => canonify("directory_present_${target}");
-      "args"               slist => { "${target}" };
-      "report_param"      string => join("_", args);
-      "full_class_prefix" string => canonify("directory_present_${report_param}");
-      "class_prefix"      string => string_head("${full_class_prefix}", "1000");
+      "old_class_prefix"       string => canonify("directory_present_${target}");
+      "uniq_old_class_prefix"  string => canonify("${report_data.directive_id}_directory_present_${target}");
+      "args"                   slist => { "${target}" };
+
+      "report_param"           string => join("_", args);
+      "full_class_prefix"      string => canonify("directory_present_${report_param}");
+      "class_prefix"           string => string_head("${full_class_prefix}", "1000");
+      "full_uniq_class_prefix" string => canonify("${report_data.directive_id}_directory_present_${report_param}");
+      "class_prefix"           string => string_head("${full_uniq_class_prefix}", "1000");
 
   files:
     "${target}/."
-      create        => "true",
-      classes       => classes_generic_two("${old_class_prefix}", "${class_prefix}");
+      create  => "true",
+      classes => classes_generic_two("${uniq_old_class_prefix}", "${uniq_class_prefix}");
 
   methods:
-    "report"             usebundle => _log_v3("Create directory ${target}", "${target}", "${old_class_prefix}", "${class_prefix}", @{args});
+    "new result classes" usebundle => _classes_copy("${uniq_class_prefix}", "${old_class_prefix}");
+    "new result classes" usebundle => _classes_copy("${uniq_class_prefix}", "${class_prefix}");
+
+    "report"             usebundle => _log_v3("Create directory ${target}", "${target}", "${uniq_old_class_prefix}", "${uniq_class_prefix}", @{args});
 }
