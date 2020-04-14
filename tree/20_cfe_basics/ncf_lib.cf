@@ -790,6 +790,7 @@ body copy_from ncf_local_cp_method(from, method)
   type_check  => "true";
   compare     => "${method}";
   copy_backup => "timestamp";
+  preserve   => "true";
 }
 
 # Modular remote copy_from body
@@ -803,6 +804,7 @@ body copy_from ncf_remote_cp_method(from, server, method)
   compare     => "${method}";
   encrypt     => "true";
   copy_backup => "timestamp";
+  preserve   => "true";
 }
 
 # Define x prefixes/suffixed with promises outcome, based on return codes
