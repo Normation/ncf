@@ -48,8 +48,8 @@ bundle agent check
     "ok_2" expression => "variable_from_augeas_var2_kept.!variable_from_augeas_var2_repaired.!variable_from_augeas_var2_error";
     "ok_var1" expression => isvariable("prefix.var1");
     "ok_var2" expression => isvariable("prefix.var2");
-    "ok_var1_cont" expression => strcmp("${prefix.var1}"," 0");
-    "ok_var2_cont" expression => strcmp("${prefix.var2}"," 0");
+    "ok_var1_cont" expression => strcmp("${prefix.var1}","0");
+    "ok_var2_cont" expression => strcmp("${prefix.var2}","0");
 
     "ok"  expression => "ok_1.ok_var1.ok_var1_cont.ok_2.ok_var2.ok_var2_cont";
   
