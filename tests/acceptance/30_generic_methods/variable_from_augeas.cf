@@ -51,7 +51,7 @@ bundle agent check
     "ok_var1_cont" expression => strcmp("${prefix.var1}","0");
     "ok_var2_cont" expression => strcmp("${prefix.var2}","0");
 
-    "ok"  expression => "ok_1.ok_var1.ok_var1_cont.ok_2.ok_var2.ok_var2_cont";
+    "ok" expression => "ok_1.ok_var1.ok_var1_cont.ok_2.ok_var2.ok_var2_cont";
   
   reports:
     ok::
