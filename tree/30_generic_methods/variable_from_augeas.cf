@@ -47,6 +47,7 @@ bundle agent variable_from_augeas(variable_prefix, variable_name, path, lens, fi
      "class_prefix" string => canonify(join("_", "promisers"));
      "args" slist => {"${variable_prefix}", "${variable_name}", "${path}", "${lens}", "${file}"};
 
+
    pass1.file_defined::
      "case" string => execresult("/usr/bin/env printf \"set /augeas/load/${lens}/lens \"${lens}.lns\" \n set /augeas/load/${lens}/incl \"${file}\" \n load \n get /files/${path}\" | augtool --noautoload","useshell");
    
@@ -69,7 +70,7 @@ bundle agent variable_from_augeas(variable_prefix, variable_name, path, lens, fi
      "file_defined" expression => not(strcmp("${file}",""));
 
  methods: 
-    pass2.augeas_variable.variable_defined::
+    pass2.augeas_binaries.variable_defined::
        "success" usebundle => _classes_success("${old_class_prefix}");
        "success" usebundle => _classes_success("${class_prefix}");
        "report" usebundle => _log("Getting the node value from ${path}", "${old_class_prefix}", "${class_prefix}", @{args});
