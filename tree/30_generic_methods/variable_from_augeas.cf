@@ -48,15 +48,15 @@ bundle agent variable_from_augeas(variable_prefix, variable_name, path, lens, fi
      "args" slist => {"${variable_prefix}", "${variable_name}", "${path}", "${lens}", "${file}"};
 
    pass1.file_defined::
-     "case1" string => execresult("/usr/bin/env printf \"set /augeas/load/${lens}/lens \"${lens}.lns\" \n set /augeas/load/${lens}/incl \"${file}\" \n load \n get /files/${path}\" | augtool --noautoload","useshell");
-     "data" data => data_regextract("= (.*)", "$(case1)");
+     "case" string => execresult("/usr/bin/env printf \"set /augeas/load/${lens}/lens \"${lens}.lns\" \n set /augeas/load/${lens}/incl \"${file}\" \n load \n get /files/${path}\" | augtool --noautoload","useshell");
+   
+   pass1.!file_defined::
+     "case" string => execresult("/usr/bin/env augtool get /files/'${path}'","useshell");
+   
+   pass1::
+     "data" data => data_regextract("= (.*)", "$(case)");
      "${variable_prefix}.${variable_name}" string => "$(data[1])";
 
-   pass1.!file_defined::
-     "case2" string => execresult("/usr/bin/env augtool get /files/'${path}'","useshell");
-     "data" data => data_regextract("= (.*)", "$(case2)");
-     "${variable_prefix}.${variable_name}" string => "$(data[1])";
- 
  classes:
     "pass2" expression => "pass1";
     "pass1";
