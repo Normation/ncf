@@ -57,9 +57,6 @@ bundle agent variable_from_augeas(variable_prefix, variable_name, path, lens, fi
      "data" data => data_regextract("=(.*)", "$(case2)");
      "${variable_prefix}.${variable_name}" string => "$(data[1])";
  
- reports:
-    "${${variable_prefix}.${variable_name}}";
-
  classes:
     "pass2" expression => "pass1";
     "pass1";
@@ -75,7 +72,7 @@ bundle agent variable_from_augeas(variable_prefix, variable_name, path, lens, fi
     pass2.augeas_variable.variable_defined::
        "success" usebundle => _classes_success("${old_class_prefix}");
        "success" usebundle => _classes_success("${class_prefix}");
-       "report" usebundle => _log("Getting the node value from ${file}", "${old_class_prefix}", "${class_prefix}", @{args});
+       "report" usebundle => _log("Getting the node value from ${path}", "${old_class_prefix}", "${class_prefix}", @{args});
 
     pass2.!augeas_binaries.variable_defined::
       "failure" usebundle => _classes_failure("${old_class_prefix}");
