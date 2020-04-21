@@ -26,7 +26,7 @@
 # # Use case 1: To simply get the value of the ip address of the first line in the '/etc/hosts' file ('label' and 'value' are naming examples of 'variable_prefix' and 'variable_name')
 # variable_from_augeas("label","value","etc/hosts/1/ipaddr");
 # # Use case 2: To associate the 'Hosts' lens with the '/etc/hosts' file then get the node value
-# variable_from_augeas("label","value","Hosts","/etc/hosts","etc/hosts/1/ipaddr");
+# variable_from_augeas("label","value","etc/hosts/1/ipaddr","Hosts","/etc/hosts");
 #
 # @parameter variable_prefix The prefix of the variable name
 # @parameter variable_name   The variable to define, the full name will be variable_prefix.variable_name
@@ -36,7 +36,7 @@
 # @parameter_constraint file "allow_empty_string" : true
 # @parameter_constraint lens "allow_empty_string" : true
 # @class_prefix variable_from_augeas
-# @class_parameter path
+# @class_parameter variable_name
 
 
 bundle agent variable_from_augeas(variable_prefix, variable_name, path, lens, file)
@@ -56,9 +56,9 @@ bundle agent variable_from_augeas(variable_prefix, variable_name, path, lens, fi
      "case2" string => execresult("/usr/bin/env augtool get /files/'${path}'","useshell");
      "data" data => data_regextract("=(.*)", "$(case2)");
      "${variable_prefix}.${variable_name}" string => "$(data[1])";
-
-  reports:
-   "${${variable_prefix}.${variable_name}}";
+ 
+ reports:
+    "${${variable_prefix}.${variable_name}}";
 
  classes:
     "pass2" expression => "pass1";
