@@ -78,11 +78,6 @@ bundle agent variable_from_augeas(variable_prefix, variable_name, path, lens, fi
     pass2.!augeas_binaries.variable_defined::
       "failure" usebundle => _classes_failure("${old_class_prefix}");
       "failure" usebundle => _classes_failure("${class_prefix}");
-      "report" usebundle => _log("Augeas binaries does not exist. Getting the node value from ${path}", "${old_class_prefix}", "${class_prefix}", @{args});
-
-    pass2.!augeas_binaries.!variable_defined::
-      "failure" usebundle => _classes_failure("${old_class_prefix}");
-      "failure" usebundle => _classes_failure("${class_prefix}");
       "report" usebundle => _log("Augeas binaries does not exist. Getting the node value from ${path}", "${old_class_prefix}", "${class_prefix}", @{args});      
 
     pass2.augeas_binaries.!variable_defined::
