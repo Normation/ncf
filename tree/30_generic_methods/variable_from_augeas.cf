@@ -49,10 +49,10 @@ bundle agent variable_from_augeas(variable_prefix, variable_name, path, lens, fi
 
 
    pass1.file_defined::
-     "case" string => execresult("/usr/bin/env printf \"set /augeas/load/${lens}/lens \"${lens}.lns\" \n set /augeas/load/${lens}/incl \"${file}\" \n load \n get /files/${path}\" | augtool --noautoload","useshell");
+     "case" string => execresult("printf \"set /augeas/load/${lens}/lens \"${lens}.lns\" \n set /augeas/load/${lens}/incl \"${file}\" \n load \n get /files/${path}\" | ${ncf_paths.path[augtool]} --noautoload","useshell");
    
    pass1.!file_defined::
-     "case" string => execresult("/usr/bin/env augtool get /files/'${path}'","useshell");
+     "case" string => execresult("printf \"get /files/${path}\" | ${ncf_paths.path[augtool]}","useshell");
    
    pass1::
      "data" data => data_regextract("= (.*)", "$(case)");
@@ -64,7 +64,7 @@ bundle agent variable_from_augeas(variable_prefix, variable_name, path, lens, fi
 
    pass2::
      "variable_defined" expression => isvariable("${variable_prefix}.${variable_name}");  
-     "augeas_binaries" expression => fileexists("/usr/bin/augtool");
+     "augeas_binaries" expression => fileexists("${ncf_paths.path[augtool]}");
    
    pass1::
      "file_defined" expression => not(strcmp("${file}",""));

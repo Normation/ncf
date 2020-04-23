@@ -26,6 +26,11 @@ bundle common ncf_paths
       "path[curl]"   string => "${paths.path[curl]}",
                      unless => isvariable("g.rudder_curl");
 
+      "path[augtool]"   string => "${g.rudder_augtool}",
+                            if => isvariable("g.rudder_augtool");
+
+      "path[augtool]"   string => "${paths.path[augtool]}",
+                        unless => isvariable("g.rudder_augtool");
 
       "path[id]"     string => "/usr/bin/id";
 
