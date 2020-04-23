@@ -215,7 +215,6 @@ bundle common paths
       "path[sort]"     string => "/usr/bin/sort";
       "path[test]"     string => "/usr/bin/test";
       "path[wget]"     string => "/usr/bin/wget";
-      "path[augtool]"  string => "/usr/bin/augtool";
 
 
     freebsd|netbsd|openbsd::
@@ -290,7 +289,6 @@ bundle common paths
       "path[perl]"     string => "/usr/bin/perl";
       "path[printf]"   string => "/usr/bin/printf";
       "path[wget]"     string => "/usr/bin/wget";
-      "path[augtool]"  string => "/usr/bin/augtool";
       #
       "path[svcs]"     string => "/usr/bin/svcs";
       "path[svcadm]"   string => "/usr/sbin/svcadm";
@@ -368,7 +366,6 @@ bundle common paths
       "path[wc]"            string => "/usr/bin/wc";
       "path[wget]"          string => "/usr/bin/wget";
       "path[realpath]"      string => "/usr/bin/realpath";
-      "path[augtool]"       string => "/usr/bin/augtool";
       #
       "path[chkconfig]" string => "/sbin/chkconfig";
       "path[groupadd]"  string => "/usr/sbin/groupadd";
@@ -459,7 +456,6 @@ bundle common paths
       "path[wc]"            string => "/usr/bin/wc";
       "path[wget]"          string => "/usr/bin/wget";
       "path[realpath]"      string => "/usr/bin/realpath";
-      "path[augtool]"       string => "/usr/bin/augtool"; 
       #
       "path[apt_cache]"           string => "/usr/bin/apt-cache";
       "path[apt_config]"          string => "/usr/bin/apt-config";
@@ -532,8 +528,6 @@ bundle common paths
       "path[tr]"            string => "/usr/bin/tr";
       "path[logger]"        string => "/bin/logger";
       "path[wget]"          string => "/usr/bin/wget";
-      "path[augtool]"       string => "/usr/bin/augtool"; 
-
       #
       "path[chkconfig]"     string => "/sbin/chkconfig";
       "path[groupadd]"      string => "/usr/sbin/groupadd";
