@@ -49,10 +49,10 @@ bundle agent augeas_set(variable_prefix, variable_name, path, lens, file, value)
      "args" slist => {"${variable_prefix}", "${variable_name}", "${path}", "${lens}", "${file}","${value}"};
 
    pass1.file_defined::
-     "${variable_prefix}.${variable_name}" string => execresult("/usr/bin/env printf \"set /augeas/load/${lens}/lens \"${lens}.lns\" \n set /augeas/load/${lens}/incl \"${file}\" \n load \n set /files/${path} ${value} \n save\" | augtool --noautoload","useshell");
+     "${variable_prefix}.${variable_name}" string => execresult("printf \"set /augeas/load/${lens}/lens \"${lens}.lns\" \n set /augeas/load/${lens}/incl \"${file}\" \n load \n set /files/${path} ${value} \n save\" | ${ncf_paths.path[augtool]} --noautoload","useshell");
 
    pass1.!file_defined::
-     "${variable_prefix}.${variable_name}" string => execresult("/usr/bin/env printf \"set /files/${path} ${value} \n save\" | augtool","useshell");
+     "${variable_prefix}.${variable_name}" string => execresult("printf \"set /files/${path} ${value} \n save\" | ${ncf_paths.path[augtool]}","useshell");
 
  classes:
     "pass2" expression => "pass1";
@@ -60,7 +60,8 @@ bundle agent augeas_set(variable_prefix, variable_name, path, lens, file, value)
 
    pass2::
      "variable_defined" expression => isvariable("${variable_prefix}.${variable_name}");  
-     "augeas_binaries" expression => fileexists("/usr/bin/augtool");
+     "augeas_binaries" expression => fileexists("${ncf_paths.path[augtool]}");
+
    
    pass1::
      "file_defined" expression => not(strcmp("${file}",""));
