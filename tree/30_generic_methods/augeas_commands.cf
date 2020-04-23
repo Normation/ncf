@@ -39,10 +39,11 @@ bundle agent augeas_commands(variable_prefix, variable_name, commands, noautoloa
      "args" slist => {"${variable_prefix}", "${variable_name}", "${commands}", "${noautoload}"};
 
    pass1.noautoload_defined::
-     "${variable_prefix}.${variable_name}" string =>  execresult("/usr/bin/env printf \"${commands}\" | augtool --noautoload","useshell"); 
+     "${variable_prefix}.${variable_name}" string =>  execresult("printf \"${commands}\" | ${ncf_paths.path[augtool]} --noautoload","useshell"); 
 
    pass1.!noautoload_defined::
-     "${variable_prefix}.${variable_name}" string =>  execresult("/usr/bin/env printf \"${commands}\" | augtool","useshell");
+     "${variable_prefix}.${variable_name}" string =>  execresult("printf \"${commands}\" | ${ncf_paths.path[augtool]}","useshell");
+
   
  defaults:
      "noautoload" string => "false", if_match_regex => "";
@@ -56,7 +57,7 @@ bundle agent augeas_commands(variable_prefix, variable_name, commands, noautoloa
 
    pass2::
      "variable_defined" expression => isvariable("${variable_prefix}.${variable_name}");  
-     "augeas_binaries" expression => fileexists("/usr/bin/augtool");
+     "augeas_binaries" expression => fileexists("${ncf_paths.path[augtool]}");
     
  methods: 
     pass2.augeas_binaries.variable_defined::
