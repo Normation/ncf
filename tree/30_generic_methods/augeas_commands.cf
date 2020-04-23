@@ -17,8 +17,8 @@
 #####################################################################################
 #
 # @name Augeas Commands
-# @description Use augeas binaries to execute augtool command directly on the agent. 
-# The generic method will return the command execution output otherwise if the augeas isn't installed on the agent, it will produces an error.
+# @description Use augeas binaries to execute augtool command(s) directly on the agent. 
+# The generic method will return the command(s) execution output otherwise if the augeas isn't installed on the agent, it will produces an error.
 #
 # @parameter variable_prefix The prefix of the variable name
 # @parameter variable_name   The variable to define, the full name will be variable_prefix.variable_name
