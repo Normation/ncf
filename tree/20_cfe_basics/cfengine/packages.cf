@@ -75,22 +75,22 @@ bundle common package_module_knowledge
 
 body package_module apt_get
 {
-    query_installed_ifelapsed => "60";
-    query_updates_ifelapsed => "240";
+    query_installed_ifelapsed => "${node.properties[rudder][packages][installed_cache_expire]}";
+    query_updates_ifelapsed => "${node.properties[rudder][packages][updates_cache_expire]}";
     #default_options =>  {};
 }
 
 body package_module zypper
 {
-      query_installed_ifelapsed => "60";
-      query_updates_ifelapsed => "240";
+      query_installed_ifelapsed => "${node.properties[rudder][packages][installed_cache_expire]}";
+      query_updates_ifelapsed => "${node.properties[rudder][packages][updates_cache_expire]}";
       #default_options =>  {};
 }
 
 body package_module zypper_pattern
 {
-      query_installed_ifelapsed => "60";
-      query_updates_ifelapsed => "240";
+      query_installed_ifelapsed => "${node.properties[rudder][packages][installed_cache_expire]}";
+      query_updates_ifelapsed => "${node.properties[rudder][packages][updates_cache_expire]}";
       #default_options =>  {};
 }
 
@@ -111,8 +111,8 @@ body package_module nimclient
 # }
 # ```
 {
-    query_installed_ifelapsed => "60";
-    query_updates_ifelapsed => "14400";
+    query_installed_ifelapsed => "${node.properties[rudder][packages][installed_cache_expire]}";
+    query_updates_ifelapsed => "${node.properties[rudder][packages][updates_cache_expire]}";
 
     # This would likey be customized based on your infrastructure specifics
     # you may for example want to default the lpp_source based on something
@@ -134,28 +134,28 @@ body package_module pkgsrc
 # }
 # ```
 {
-    query_installed_ifelapsed => "60";
-    query_updates_ifelapsed => "14400";
+    query_installed_ifelapsed => "${node.properties[rudder][packages][installed_cache_expire]}";
+    query_updates_ifelapsed => "${node.properties[rudder][packages][updates_cache_expire]}";
 }
 
 body package_module yum
 {
-    query_installed_ifelapsed => "60";
-    query_updates_ifelapsed => "240";
+    query_installed_ifelapsed => "${node.properties[rudder][packages][installed_cache_expire]}";
+    query_updates_ifelapsed => "${node.properties[rudder][packages][updates_cache_expire]}";
     #default_options => {};
 }
 
 body package_module slackpkg
 {
-      query_installed_ifelapsed => "60";
-      query_updates_ifelapsed => "240";
+      query_installed_ifelapsed => "${node.properties[rudder][packages][installed_cache_expire]}";
+      query_updates_ifelapsed => "${node.properties[rudder][packages][updates_cache_expire]}";
       #default_options =>  {};
 }
 
 body package_module pkg
 {
-    query_installed_ifelapsed => "60";
-    query_updates_ifelapsed => "240";
+    query_installed_ifelapsed => "${node.properties[rudder][packages][installed_cache_expire]}";
+    query_updates_ifelapsed => "${node.properties[rudder][packages][updates_cache_expire]}";
     #default_options => {};
 }
 
@@ -180,14 +180,14 @@ body package_module freebsd_ports
 # }
 # ```
 {
-    query_installed_ifelapsed => "60";
-    query_updates_ifelapsed => "240";
+    query_installed_ifelapsed => "${node.properties[rudder][packages][installed_cache_expire]}";
+    query_updates_ifelapsed => "${node.properties[rudder][packages][updates_cache_expire]}";
 }
 
 body package_module test
 {
-    query_installed_ifelapsed => "60";
-    query_updates_ifelapsed => "240";
+    query_installed_ifelapsed => "${node.properties[rudder][packages][installed_cache_expire]}";
+    query_updates_ifelapsed => "${node.properties[rudder][packages][updates_cache_expire]}";
     default_options => { "$(G.testfile)" };
 }
 
@@ -218,7 +218,7 @@ bundle common common_knowledge
 # This common bundle defines general things about platforms.
 {
   vars:
-      "list_update_ifelapsed" string => "240";
+      "list_update_ifelapsed" string => "${node.properties[rudder][packages][updates_cache_expire]}";
 }
 
 bundle common debian_knowledge
