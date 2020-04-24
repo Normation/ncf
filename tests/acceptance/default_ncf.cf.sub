@@ -170,5 +170,5 @@ bundle agent apply_gm(name, args, status, result_class, mode)
 bundle common node
 {
   vars:
-      "properties" data => '{ "rudder": { "packages" => { "installed_cache_expire": 60, "updates_cache_expire": 240 } } }';
+      "properties" data => '{ "rudder": { "packages": { "installed_cache_expire": 60, "updates_cache_expire": 240 } } }';
 }
