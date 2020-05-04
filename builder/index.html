@@ -491,8 +491,7 @@
                     <li
                       ng-repeat="method_call in selectedTechnique.method_calls"
                       ng-show="checkFilterMethod(method_call)"
-                      ng-init="method = generic_methods[method_call['method_name']]"
-                      ng-class="{'active': methodIsSelected(method_call), 'missingParameters': checkMissingParameters(method_call.parameters, method.parameter).length > 0, 'errorParameters': checkErrorParameters(method_call.parameters).length > 0, 'is-edited' : canResetMethod(method_call)}"
+                      ng-class="{'active': methodIsSelected(method_call), 'missingParameters': checkMissingParameters(method_call.parameters, generic_methods[method_call['method_name']].parameter).length > 0, 'errorParameters': checkErrorParameters(method_call.parameters).length > 0, 'is-edited' : canResetMethod(method_call)}"
                       >
                       <div
                         class="method row no-gutters"
@@ -529,11 +528,11 @@
                             </div>
 
                             <div class="method-name col-auto">
-                              {{method_call.component ? method_call.component : method.name }}
+                              {{method_call.component ? method_call.component : generic_methods[method_call['method_name']].name }}
                               <span
                                 class="cursor-help"
                                 uib-popover-template="'deprecatedMethod.html'"
-                                popover-title="{{method.name}}"
+                                popover-title="{{generic_methods[method_call['method_name']].name}}"
                                 popover-trigger="mouseenter"
                                 popover-append-to-body="true">
                                 <i class="fas fa-info-circle tooltip-icon" ng-class="{'deprecated-icon':(method_call.deprecated || isDeprecated(method_call.method_name))}"></i>
@@ -541,23 +540,23 @@
                             </div>
 
                             <div class="method-content">
-                              <div class="method-param col-auto flex-form"  ng-if="getClassParameter(method_call).value && checkMissingParameters(method_call.parameters, method.parameter).length<=0 && checkErrorParameters(method_call.parameters).length<=0">
-                                <label>{{getClassParameter(method_call).name | parameterName}}: </label>
+                              <div class="method-param col-auto flex-form"  ng-if="getClassParameter(method_call).value && checkMissingParameters(method_call.parameters, generic_methods[method_call['method_name']].parameter).length<=0 && checkErrorParameters(method_call.parameters).length<=0">
+                                <label>{{getClassParameter(method_call).methodId | parameterName}}: </label>
                                 <textarea class="form-control" msd-elastic rows="1" ng-model="getClassParameter(method_call).value" ng-readonly="true" ng-click="$event.stopPropagation();"></textarea>
                               </div>
                               <div ng-form="arg_method" ng-repeat="parameter in method_call.parameters  track by $index" class="method-errors col-auto">
-                                <input ng-hide="true" type="text" name="param" ng-model="parameter.value" constraint parameter="parameter" parameterinfo="(method.parameter[$index])" >
+                                <input ng-hide="true" type="text" name="param" ng-model="parameter.value" constraint parameter="parameter" parameterinfo="(generic_methods[method_call['method_name']].parameter[$index])" >
                               </div>
-                              <div class="warns" ng-if="!getClassParameter(method_call).value || checkMissingParameters(method_call.parameters, method.parameter).length>0 || checkErrorParameters(method_call.parameters).length>0">
+                              <div class="warns" ng-if="!getClassParameter(method_call).value || checkMissingParameters(method_call.parameters, generic_methods[method_call['method_name']].parameter).length>0 || checkErrorParameters(method_call.parameters).length>0">
                                 <span class="warn-param warning"
-                                  uib-tooltip="{{getWarningTooltipMessage(checkMissingParameters(method_call.parameters, method.parameter))}}"
+                                  uib-tooltip="{{getWarningTooltipMessage(checkMissingParameters(method_call.parameters, generic_methods[method_call['method_name']].parameter))}}"
                                   tooltip-placement="top"
                                   tooltip-trigger="mouseenter"
                                   popup-open-delay="300"
                                   tooltip-append-to-body="true"
                                   ng-click="selectMethod(method_call)"
                                   >
-                                  <b>{{checkMissingParameters(method_call.parameters, method.parameter).length}}</b> required parameter{{checkMissingParameters(method_call.parameters, method.parameter).length > 1 ? "s" : ""}} missing
+                                  <b>{{checkMissingParameters(method_call.parameters, generic_methods[method_call['method_name']].parameter).length}}</b> required parameter{{checkMissingParameters(method_call.parameters, generic_methods[method_call['method_name']].parameter).length > 1 ? "s" : ""}} missing
                                 </span>
                                 <span class="warn-param error"
                                   uib-tooltip="{{getErrorTooltipMessage(checkErrorParameters(method_call.parameters))}}"
@@ -583,7 +582,7 @@
                         <div>
                           <div class="form-group">
                             <label for="component">Report component:</label>
-                            <input type="text" name="component" class="form-control" ng-model="method_call.component"  placeholder="{{method.name}}"/>
+                            <input type="text" name="component" class="form-control" ng-model="method_call.component"  placeholder="{{generic_methods[method_call['method_name']].name}}"/>
                           </div>
                           <div class="row">
                             <ul class="tabs-list">
@@ -600,10 +599,9 @@
                           </div>
                           <div class="tabs">
                             <div class="tab-parameters" ng-if="ui.methodTabs[method_call['$$hashKey']]=='parameters' || ui.methodTabs[method_call['$$hashKey']]===undefined">
-                              <div class="form-group method-parameter" show-errors ng-form="subForm" ng-repeat="parameter in method_call.parameters track by $index" ng-init="parameterInfo = (method.parameter[$index])">
+                              <div class="form-group method-parameter" show-errors ng-form="subForm" ng-repeat="parameter in method_call.parameters track by $index" ng-init="parameterInfo = (generic_methods[method_call['method_name']].parameter[$index])">
                                 <ng-form name="paramForm" role="form">
                                   <label for="param-{{$index}}">
-
                                     <span> {{parameterInfo.name | parameterName}} - <span class="badge badge-secondary ng-binding">{{parameterInfo.type}}</span> - </span>
                                     <small>
                                       {{parameterInfo.description}}

@@ -91,6 +91,7 @@ app.directive('constraint', function($http, $q, $timeout) {
     },
     require: 'ngModel',
     link: function(scope, elm, attrs, ctrl) {
+    if (scope.parameterinfo === undefined) return false;
     if((scope.parameterinfo.constraints.allow_empty_string)&&(scope.parameter.value === undefined)){
       scope.parameter.value = "";
     }
@@ -99,7 +100,7 @@ app.directive('constraint', function($http, $q, $timeout) {
       if (modelValue === undefined) {
         return $q.reject("Value is empty");
       }
-      var data = {"value" : modelValue, "constraints" : scope.parameterinfo.constraints}
+      var data = {"value" : modelValue, "constraints" : scope.parameterinfo !== undefined ? scope.parameterinfo.constraints : ""}
 
       var timeoutStatus = false;
       var timeout = $q.defer();
@@ -1036,6 +1037,7 @@ $scope.onImportFileChange = function (fileEl) {
 
   // Check if a method has not been changed, and if we can use reset function
   $scope.canResetMethod = function(method) {
+    if($scope.generic_methods === undefined) return false;
     var canReset = method ? true : false;
     if (!canReset) return false;
     if (method.original_index === undefined) {
@@ -1167,17 +1169,8 @@ $scope.onImportFileChange = function (fileEl) {
 
   // Get the value of the parameter used in generated class
   $scope.getClassParameter= function(method_call) {
-    if (method_call.method_name in $scope.generic_methods ) {
-      var method = $scope.generic_methods[method_call.method_name];
-      var class_parameter = method.class_parameter;
-      var param = method.parameter.find(element => element.name === class_parameter);
-      if (param === undefined)
-        return method_call.parameters[0];
-      else
-        return param;
-    } else {
-      return method_call.parameters[0];
-    }
+    if(method_call === undefined) return false;
+    return method_call.parameters[0];
   }
 
   // Get the class prefix value
@@ -1247,6 +1240,7 @@ $scope.onImportFileChange = function (fileEl) {
 
   // Check if a method is deprecated
   $scope.isDeprecated = function(methodName) {
+    if($scope.generic_methods === undefined) return false;
     return $scope.generic_methods[methodName].deprecated;
   };
 
@@ -1505,6 +1499,7 @@ $scope.onImportFileChange = function (fileEl) {
 
   $scope.checkMissingParameters = function(parameters, parameterInfo){
     var result = [];
+    if(parameterInfo === undefined) return result;
     for(var i=0; i<parameters.length; i++) {
       if(parameterInfo[i].constraints.allow_empty_string === false && !parameters[i].value && (parameters[i].$errors && parameters[i].$errors.length <= 0)){
         result.push(parameters[i].name);
@@ -1549,6 +1544,7 @@ $scope.onImportFileChange = function (fileEl) {
   }
 
   $scope.getStatusTooltipMessage = function(method){
+    if($scope.generic_methods === undefined) return "";
     var msg;
     var missingParameters = $scope.checkMissingParameters(method.parameters,$scope.generic_methods[method.method_name].parameter).length;
     var errorParameters   = $scope.checkErrorParameters(method.parameters).length;
@@ -1669,8 +1665,11 @@ $scope.onImportFileChange = function (fileEl) {
   }
 
   $scope.getWarningTooltipMessage = function(params){
-    var paramString = params.join(', ');
-    return ("Parameter" + (params.length > 1 ? "s " : " ") + paramString + (params.length > 1 ? " are" : " is") + " missing.")
+    if(params){
+      var paramString = params.join(', ');
+      return ("Parameter" + (params.length > 1 ? "s " : " ") + paramString + (params.length > 1 ? " are" : " is") + " missing.")
+    }
+    return "";
   }
   $scope.getErrorTooltipMessage = function(params){
     var paramString = params.join(', ');
