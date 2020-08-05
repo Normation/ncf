@@ -34,32 +34,70 @@ bundle agent file_line_present_in_ini_section(file, section, line)
       "report_param"           string => join("_", args);
       "full_class_prefix"      string => canonify("file_line_present_in_ini_section_${report_param}");
       "class_prefix"           string => string_head("${full_class_prefix}", "1000");
-      "section_and_blank_line" string => "[${section}]
-";
+      "hash"                   string => hash("${report_param}", "md5");
+      "last_line"              string => execresult("/usr/bin/tail -n 1 ${file} #${hash}", "useshell");
+
+    pass2::
+      "line_list" slist =>  splitstring("${line}", "${const.n}", "999999");
+      "unique_lines" slist =>  unique("line_list");
+      "lines_to_insert" string => join("${const.n}", "unique_lines");
 
   classes:
-      # Check if the section exist: if not, a class will be raised to add it with a blank line.
+      "pass3" expression => "pass2";
+      "pass2" expression => "pass1";
+      "pass1" expression => "any";
+
       "section_absent"  not => regline("^\[${section}\]$","${file}");
+      "last_line_is_target_section" expression => regcmp("\[${section}\]\s*", "${last_line}");
 
   files:
-      # If the section is not present in the file, firstly it will be added
-      # with a blank line in order to be catched for the lines to add after it.
+    pass3::
+      # If the section is not present in the file, add it at the end
+      # Also, clean the doubled line in the input, since we can not
+      # limit the scope to the section, it does not exist yet
+       "${file}"
+         create        => "true",
+         edit_line     => append_block("[${section}]${const.n}${lines_to_insert}"),
+         edit_defaults => ncf_empty_select("false"),
+         ifvarclass    => "section_absent",
+         comment       => "Add section to file with the intended lines",
+         classes       => classes_generic_two("${old_class_prefix}", "${class_prefix}");
+
+      # If the section is empty and the last one, use a different insert method
+      # This is due to a limitation issue on the select_region body
+      # see https://github.com/cfengine/masterfiles/blob/master/tests/acceptance/lib/files/CFE-1710.cf#L29
       "${file}"
-        create        => "true",
-        edit_line     => ncf_insert_block("${section_and_blank_line}"),
+        edit_line     => append_lines_block("${line}"),
         edit_defaults => ncf_empty_select("false"),
-        ifvarclass    => "section_absent",
-        comment       => "Add section to file with a blank line";
+        ifvarclass    => "last_line_is_target_section",
+        comment       => "Add lines at the end of the file since the target section exists, is empty and is the last one in the file",
+        classes       => classes_generic_two("${old_class_prefix}", "${class_prefix}");
 
       # Add the missing lines after the section.
       "${file}"
-        create        => "true",
         edit_line     => ensure_line_in_ini_section("${section}", "${line}"),
         edit_defaults => ncf_empty_select("false"),
+        ifvarclass    => "!section_absent.!last_line_is_target_section",
         classes       => classes_generic_two("${old_class_prefix}", "${class_prefix}");
 
   methods:
+    pass3::
       "sanitize" usebundle => _classes_sanitize("${class_prefix}");
       "sanitize" usebundle => _classes_sanitize("${old_class_prefix}");
       "report"   usebundle => _log_v3("Insert line(s) into ${file}", "${file}", "${old_class_prefix}", "${class_prefix}", @{args});
 }
+
+bundle edit_line append_block(block) {
+  insert_lines:
+    "${block}" location => append,
+               insert_type => "preserve_all_lines";
+}
+bundle edit_line append_lines_block(block) {
+  insert_lines:
+    "${block}" location => append;
+}
+
+body location append {
+  before_after => "after";
+}
+
