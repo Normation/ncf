@@ -107,7 +107,6 @@ foo
 bar
 foobar";
 
-
   ## SUCCESS (same than above)
     "file[5]"     string => "${tmp}/test5.ini";
     "section[5]"  string => "section1";
@@ -199,6 +198,23 @@ foo";
 [section2]
 foo";
 
+    # Simple addition with empty last section and existing content
+    "file[13]"     string => "${tmp}/test13.ini";
+    "section[13]"  string => "section1";
+    "line[13]"     string => "foo
+bar
+foobar";
+    "status[13]"   string => "repaired";
+    "initial[13]"  string => "[section0]
+foobar
+bar
+foo
+[section1]";
+    "expected[13]" string => "${initial[13]}
+foo
+bar
+foobar";
+
     "indices"     slist => getindices("status");
 
   files:
@@ -231,6 +247,7 @@ bundle agent test
     "ph10" usebundle  => apply_gm("file_line_present_in_ini_section", @{args10}, "${init.status[10]}", "ph10", "enforce" );
     "ph11" usebundle  => apply_gm("file_line_present_in_ini_section", @{args11}, "${init.status[11]}", "ph11", "enforce" );
     "ph12" usebundle  => apply_gm("file_line_present_in_ini_section", @{args12}, "${init.status[12]}", "ph12", "enforce" );
+    "ph13" usebundle  => apply_gm("file_line_present_in_ini_section", @{args13}, "${init.status[13]}", "ph13", "enforce" );
 }
 
 #######################################################
@@ -255,7 +272,7 @@ bundle agent check
                                           );
 
       "content_not_ok" expression => "!content_ok_${indices}";
-      "classes_ok"     expression => "ph0_ok.ph1_ok.ph2_ok.ph3_ok.ph4_ok.ph5_ok.ph6_ok.ph7_ok.ph8_ok.ph9_ok.ph10_ok.ph11_ok.ph12_ok";
+      "classes_ok"     expression => "ph0_ok.ph1_ok.ph2_ok.ph3_ok.ph4_ok.ph5_ok.ph6_ok.ph7_ok.ph8_ok.ph9_ok.ph10_ok.ph11_ok.ph12_ok.ph13_ok";
       "ok"             expression => "!content_not_ok.classes_ok";
 
 
@@ -272,9 +289,9 @@ ${content[${indices}]}
 ###########################"
          ifvarclass => "!content_ok_${indices}";
 
-    ok::
+    pass3.ok::
       "$(this.promise_filename) Pass";
-    !ok::
+    pass3.!ok::
       "$(this.promise_filename) FAIL";
 }
 

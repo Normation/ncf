@@ -40,7 +40,11 @@ bundle agent file_line_present_in_ini_section(file, section, line)
     pass2::
       "line_list" slist =>  splitstring("${line}", "${const.n}", "999999");
       "unique_lines" slist =>  unique("line_list");
-      "lines_to_insert" string => join("${const.n}", "unique_lines");
+      "section_content" string => join("${const.n}", "unique_lines");
+      "lines_to_insert" string => "[${section}]${const.n}${section_content}",
+        ifvarclass => "section_absent";
+      "lines_to_insert" string => "${section_content}",
+        ifvarclass => "last_line_is_target_section";
 
   classes:
       "pass3" expression => "pass2";
@@ -55,19 +59,19 @@ bundle agent file_line_present_in_ini_section(file, section, line)
       # If the section is not present in the file, add it at the end
       # Also, clean the doubled line in the input, since we can not
       # limit the scope to the section, it does not exist yet
-       "${file}"
-         create        => "true",
-         edit_line     => append_block("[${section}]${const.n}${lines_to_insert}"),
-         edit_defaults => ncf_empty_select("false"),
-         ifvarclass    => "section_absent",
-         comment       => "Add section to file with the intended lines",
-         classes       => classes_generic_two("${old_class_prefix}", "${class_prefix}");
+      "${file}"
+        edit_line     => append_block("${lines_to_insert}"),
+        edit_defaults => ncf_empty_select("false"),
+        create        => "true",
+        ifvarclass    => "section_absent",
+        comment       => "Add lines at the end of the file since the target section exists, is empty and is the last one in the file",
+        classes       => classes_generic_two("${old_class_prefix}", "${class_prefix}");
 
       # If the section is empty and the last one, use a different insert method
       # This is due to a limitation issue on the select_region body
       # see https://github.com/cfengine/masterfiles/blob/master/tests/acceptance/lib/files/CFE-1710.cf#L29
       "${file}"
-        edit_line     => append_lines_block("${line}"),
+        edit_line     => append_block("${lines_to_insert}"),
         edit_defaults => ncf_empty_select("false"),
         ifvarclass    => "last_line_is_target_section",
         comment       => "Add lines at the end of the file since the target section exists, is empty and is the last one in the file",
@@ -85,19 +89,5 @@ bundle agent file_line_present_in_ini_section(file, section, line)
       "sanitize" usebundle => _classes_sanitize("${class_prefix}");
       "sanitize" usebundle => _classes_sanitize("${old_class_prefix}");
       "report"   usebundle => _log_v3("Insert line(s) into ${file}", "${file}", "${old_class_prefix}", "${class_prefix}", @{args});
-}
-
-bundle edit_line append_block(block) {
-  insert_lines:
-    "${block}" location => append,
-               insert_type => "preserve_all_lines";
-}
-bundle edit_line append_lines_block(block) {
-  insert_lines:
-    "${block}" location => append;
-}
-
-body location append {
-  before_after => "after";
 }
 
