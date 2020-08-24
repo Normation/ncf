@@ -64,7 +64,7 @@ bundle agent file_line_present_in_ini_section(file, section, line)
         edit_defaults => ncf_empty_select("false"),
         create        => "true",
         ifvarclass    => "section_absent",
-        comment       => "Add lines at the end of the file since the target section exists, is empty and is the last one in the file",
+        comment       => "If the section or the file does not exist",
         classes       => classes_generic_two("${old_class_prefix}", "${class_prefix}");
 
       # If the section is empty and the last one, use a different insert method
