@@ -83,15 +83,15 @@ bundle common package_module_knowledge
 
 body package_module apt_get
 {
-    query_installed_ifelapsed => "$(ncf_def.package_module_query_installed_ifelapsed)";
-    query_updates_ifelapsed => "$(ncf_def.package_module_query_updates_ifelapsed)";
+    query_installed_ifelapsed => "$(def.package_module_query_installed_ifelapsed)";
+    query_updates_ifelapsed => "$(def.package_module_query_updates_ifelapsed)";
     #default_options =>  {};
 }
 
 body package_module zypper
 {
-      query_installed_ifelapsed => "$(ncf_def.package_module_query_installed_ifelapsed)";
-      query_updates_ifelapsed => "$(ncf_def.package_module_query_updates_ifelapsed)";
+      query_installed_ifelapsed => "$(def.package_module_query_installed_ifelapsed)";
+      query_updates_ifelapsed => "$(def.package_module_query_updates_ifelapsed)";
       #default_options =>  {};
 }
 
@@ -112,8 +112,8 @@ body package_module nimclient
 # }
 # ```
 {
-    query_installed_ifelapsed => "$(ncf_def.package_module_query_installed_ifelapsed)";
-    query_updates_ifelapsed => "$(ncf_def.package_module_query_updates_ifelapsed)";
+    query_installed_ifelapsed => "$(def.package_module_query_installed_ifelapsed)";
+    query_updates_ifelapsed => "$(def.package_module_query_updates_ifelapsed)";
     # This would likey be customized based on your infrastructure specifics
     # you may for example want to default the lpp_source based on something
     # like `oslevel -s` output.
@@ -134,39 +134,39 @@ body package_module pkgsrc
 # }
 # ```
 {
-    query_installed_ifelapsed => "$(ncf_def.package_module_query_installed_ifelapsed)";
-    query_updates_ifelapsed => "$(ncf_def.package_module_query_updates_ifelapsed)";
+    query_installed_ifelapsed => "$(def.package_module_query_installed_ifelapsed)";
+    query_updates_ifelapsed => "$(def.package_module_query_updates_ifelapsed)";
 }
 
 body package_module yum
 # @brief Define details used when interfacing with yum
 {
-    query_installed_ifelapsed => "$(ncf_def.package_module_query_installed_ifelapsed)";
-    query_updates_ifelapsed => "$(ncf_def.package_module_query_updates_ifelapsed)";
+    query_installed_ifelapsed => "$(def.package_module_query_installed_ifelapsed)";
+    query_updates_ifelapsed => "$(def.package_module_query_updates_ifelapsed)";
     #default_options => {};
 }
 
 body package_module slackpkg
 # @brief Define details used when interfacing with slackpkg
 {
-      query_installed_ifelapsed => "$(ncf_def.package_module_query_installed_ifelapsed)";
-      query_updates_ifelapsed => "$(ncf_def.package_module_query_updates_ifelapsed)";
+      query_installed_ifelapsed => "$(def.package_module_query_installed_ifelapsed)";
+      query_updates_ifelapsed => "$(def.package_module_query_updates_ifelapsed)";
       #default_options =>  {};
 }
 
 body package_module pkg
 # @brief Define details used when interfacing with pkg
 {
-    query_installed_ifelapsed => "$(ncf_def.package_module_query_installed_ifelapsed)";
-    query_updates_ifelapsed => "$(ncf_def.package_module_query_updates_ifelapsed)";
+    query_installed_ifelapsed => "$(def.package_module_query_installed_ifelapsed)";
+    query_updates_ifelapsed => "$(def.package_module_query_updates_ifelapsed)";
     #default_options => {};
 }
 
 body package_module snap
 # @brief Define details used when interfacing with snapcraft
 {
-    query_installed_ifelapsed => "$(ncf_def.package_module_query_installed_ifelapsed)";
-    query_updates_ifelapsed => "$(ncf_def.package_module_query_updates_ifelapsed)";
+    query_installed_ifelapsed => "$(def.package_module_query_installed_ifelapsed)";
+    query_updates_ifelapsed => "$(def.package_module_query_updates_ifelapsed)";
     #default_options => {};
 }
 
@@ -190,8 +190,8 @@ body package_module freebsd_ports
 # }
 # ```
 {
-    query_installed_ifelapsed => "$(ncf_def.package_module_query_installed_ifelapsed)";
-    query_updates_ifelapsed => "$(ncf_def.package_module_query_updates_ifelapsed)";
+    query_installed_ifelapsed => "$(def.package_module_query_installed_ifelapsed)";
+    query_updates_ifelapsed => "$(def.package_module_query_updates_ifelapsed)";
 }
 
 bundle common packages_common

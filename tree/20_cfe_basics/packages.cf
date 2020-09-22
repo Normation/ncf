@@ -16,16 +16,7 @@
 #
 #####################################################################################
 
-# Used in Rudder tests
-body package_module test
-{
-      query_installed_ifelapsed => "$(ncf_def.package_module_query_installed_ifelapsed)";
-      query_updates_ifelapsed => "$(ncf_def.package_module_query_updates_ifelapsed)";
-      #default_options =>  {};
-}
-
-# Not upstream
-body package_module zypper_pattern
+body package_module ncf_module
 {
       query_installed_ifelapsed => "$(ncf_def.package_module_query_installed_ifelapsed)";
       query_updates_ifelapsed => "$(ncf_def.package_module_query_updates_ifelapsed)";
@@ -122,244 +113,36 @@ bundle agent ncf_package(name, version, architecture, provider, state, options)
 
   packages:
 
-    # Unfortunately, we have to duplicate the 4 cases for each supported package module
-    
-    #### apt ####
-
-    use_apt_provider.architecture_specified.version_specified::
+    architecture_specified.version_specified::
       "${name}"
           policy         => "${state}",
-          package_module => apt_get,
+          package_module => ncf_module,
           architecture   => "${architecture}",
           version        => "${version}",
           options        => { "${options}" },
           classes        => classes_generic_two("${old_class_prefix}", "${class_prefix}");
 
-    use_apt_provider.architecture_specified.!version_specified::
+    architecture_specified.!version_specified::
       "${name}"
           policy         => "${state}",
-          package_module => apt_get,
+          package_module => ncf_module,
           architecture   => "${architecture}",
           options        => { "${options}" },
           classes        => classes_generic_two("${old_class_prefix}", "${class_prefix}");
 
-    use_apt_provider.!architecture_specified.version_specified::
+    !architecture_specified.version_specified::
       "${name}"
           policy         => "${state}",
-          package_module => apt_get,
+          package_module => ncf_module,
           version        => "${version}",
           options        => { "${options}" },
           classes        => classes_generic_two("${old_class_prefix}", "${class_prefix}");
 
-    use_apt_provider.!architecture_specified.!version_specified::
+    !architecture_specified.!version_specified::
       "${name}"
           policy         => "${state}",
-          package_module => apt_get,
+          package_module => ncf_module,
           options        => { "${options}" },
-          classes        => classes_generic_two("${old_class_prefix}", "${class_prefix}");
-
-    #### yum ####
-
-    use_yum_provider.architecture_specified.version_specified::
-      "${name}"
-          policy         => "${state}",
-          package_module => yum,
-          architecture   => "${architecture}",
-          version        => "${version}",
-          options        => { "${options}" },
-          classes        => classes_generic_two("${old_class_prefix}", "${class_prefix}");
-
-    use_yum_provider.architecture_specified.!version_specified::
-      "${name}"
-          policy         => "${state}",
-          package_module => yum,
-          architecture   => "${architecture}",
-          options        => { "${options}" },
-          classes        => classes_generic_two("${old_class_prefix}", "${class_prefix}");
-
-    use_yum_provider.!architecture_specified.version_specified::
-      "${name}"
-          policy         => "${state}",
-          package_module => yum,
-          version        => "${version}",
-          options        => { "${options}" },
-          classes        => classes_generic_two("${old_class_prefix}", "${class_prefix}");
-
-    use_yum_provider.!architecture_specified.!version_specified::
-      "${name}"
-          policy         => "${state}",
-          package_module => yum,
-          options        => { "${options}" },
-          classes        => classes_generic_two("${old_class_prefix}", "${class_prefix}");
-
-    #### zypper ####
-
-    use_zypper_provider.architecture_specified.version_specified::
-      "${name}"
-          policy         => "${state}",
-          package_module => zypper,
-          architecture   => "${architecture}",
-          version        => "${version}",
-          options        => { "${options}" },
-          classes        => classes_generic_two("${old_class_prefix}", "${class_prefix}");
-
-    use_zypper_provider.architecture_specified.!version_specified::
-      "${name}"
-          policy         => "${state}",
-          package_module => zypper,
-          architecture   => "${architecture}",
-          options        => { "${options}" },
-          classes        => classes_generic_two("${old_class_prefix}", "${class_prefix}");
-
-    use_zypper_provider.!architecture_specified.version_specified::
-      "${name}"
-          policy         => "${state}",
-          package_module => zypper,
-          version        => "${version}",
-          options        => { "${options}" },
-          classes        => classes_generic_two("${old_class_prefix}", "${class_prefix}");
-
-    use_zypper_provider.!architecture_specified.!version_specified::
-      "${name}"
-          policy         => "${state}",
-          package_module => zypper,
-          options        => { "${options}" },
-          classes        => classes_generic_two("${old_class_prefix}", "${class_prefix}");
-
-    #### zypper-pattern ####
-
-    use_zypper_pattern_provider.architecture_specified.version_specified::
-      "${name}"
-          policy         => "${state}",
-          package_module => zypper_pattern,
-          architecture   => "${architecture}",
-          version        => "${version}",
-          options        => { "${options}" },
-          classes        => classes_generic_two("${old_class_prefix}", "${class_prefix}");
-
-    use_zypper_pattern_provider.architecture_specified.!version_specified::
-      "${name}"
-          policy         => "${state}",
-          package_module => zypper_pattern,
-          architecture   => "${architecture}",
-          options        => { "${options}" },
-          classes        => classes_generic_two("${old_class_prefix}", "${class_prefix}");
-
-    use_zypper_pattern_provider.!architecture_specified.version_specified::
-      "${name}"
-          policy         => "${state}",
-          package_module => zypper_pattern,
-          version        => "${version}",
-          options        => { "${options}" },
-          classes        => classes_generic_two("${old_class_prefix}", "${class_prefix}");
-
-    use_zypper_pattern_provider.!architecture_specified.!version_specified::
-      "${name}"
-          policy         => "${state}",
-          package_module => zypper_pattern,
-          options        => { "${options}" },
-          classes        => classes_generic_two("${old_class_prefix}", "${class_prefix}");
-
-    #### pkg ####
-
-    use_pkg_provider.architecture_specified.version_specified::
-      "${name}"
-          policy         => "${state}",
-          package_module => pkg,
-          architecture   => "${architecture}",
-          version        => "${version}",
-          options        => { "${options}" },
-          classes        => classes_generic_two("${old_class_prefix}", "${class_prefix}");
-
-    use_pkg_provider.architecture_specified.!version_specified::
-      "${name}"
-          policy         => "${state}",
-          package_module => pkg,
-          architecture   => "${architecture}",
-          options        => { "${options}" },
-          classes        => classes_generic_two("${old_class_prefix}", "${class_prefix}");
-
-    use_pkg_provider.!architecture_specified.version_specified::
-      "${name}"
-          policy         => "${state}",
-          package_module => pkg,
-          version        => "${version}",
-          options        => { "${options}" },
-          classes        => classes_generic_two("${old_class_prefix}", "${class_prefix}");
-
-    use_pkg_provider.!architecture_specified.!version_specified::
-      "${name}"
-          policy         => "${state}",
-          package_module => pkg,
-          options        => { "${options}" },
-          classes        => classes_generic_two("${old_class_prefix}", "${class_prefix}");
-
-    #### slackpkg ####
-
-    use_slackpkg_provider.architecture_specified.version_specified::
-      "${name}"
-          policy         => "${state}",
-          package_module => slackpkg,
-          architecture   => "${architecture}",
-          version        => "${version}",
-          options        => { "${options}" },
-          classes        => classes_generic_two("${old_class_prefix}", "${class_prefix}");
-
-    use_slackpkg_provider.architecture_specified.!version_specified::
-      "${name}"
-          policy         => "${state}",
-          package_module => slackpkg,
-          architecture   => "${architecture}",
-          options        => { "${options}" },
-          classes        => classes_generic_two("${old_class_prefix}", "${class_prefix}");
-
-    use_slackpkg_provider.!architecture_specified.version_specified::
-      "${name}"
-          policy         => "${state}",
-          package_module => slackpkg,
-          version        => "${version}",
-          options        => { "${options}" },
-          classes        => classes_generic_two("${old_class_prefix}", "${class_prefix}");
-
-    use_slackpkg_provider.!architecture_specified.!version_specified::
-      "${name}"
-          policy         => "${state}",
-          package_module => slackpkg,
-          options        => { "${options}" },
-          classes        => classes_generic_two("${old_class_prefix}", "${class_prefix}");
-    
-    #### test ####
-
-    use_test_provider.architecture_specified.version_specified::
-      "${name}"
-          policy         => "${state}",
-          package_module => test,
-          architecture   => "${architecture}",
-          version        => "${version}",
-          options        => { "test_db" },
-          classes        => classes_generic_two("${old_class_prefix}", "${class_prefix}");
-
-    use_test_provider.architecture_specified.!version_specified::
-      "${name}"
-          policy         => "${state}",
-          package_module => test,
-          architecture   => "${architecture}",
-          options        => { "test_db" },
-          classes        => classes_generic_two("${old_class_prefix}", "${class_prefix}");
-
-    use_test_provider.!architecture_specified.version_specified::
-      "${name}"
-          policy         => "${state}",
-          package_module => test,
-          version        => "${version}",
-          options        => { "test_db" },
-          classes        => classes_generic_two("${old_class_prefix}", "${class_prefix}");
-
-    use_test_provider.!architecture_specified.!version_specified::
-      "${name}"
-          policy         => "${state}",
-          package_module => test,
-          options        => { "test_db" },
           classes        => classes_generic_two("${old_class_prefix}", "${class_prefix}");
 
   methods:
