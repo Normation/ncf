@@ -500,6 +500,13 @@ bundle edit_line ncf_insert_block(block) {
         comment     => "Append a text block if it does not exist";
 }
 
+bundle edit_line append_block(block) {
+  insert_lines:
+      "${block}"
+        insert_type => "preserve_all_lines",
+        comment     => "Append a text block to a file, not convergent";
+}
+
 # Sets the RHS of configuration items with a given separator
 # supports keys that contains special characters (like *, ?)
 # This bundle will allow any quantity of spaces before the separator, but none
