@@ -241,6 +241,17 @@ bundle edit_line ensure_line_in_ini_section(section_name, line)
       comment       => "Insert line in section ${section_name}";
 }
 
+# Remove an section (INI-style)
+bundle edit_line ensure_section_absent(section_name) {
+  delete_lines:
+    # delete everything in the section
+    ".*"
+      select_region => INI_section("${section_name}");
+
+    # delete the section header
+    "\[${section_name}\]\s*$";
+}
+
 # Ensure that a line is present in an xml tag
 # Won't create the tag if not there (we don't know where to put it)
 bundle edit_line ensure_line_in_xml_tag(tag_name, line)
