@@ -1,0 +1,122 @@
+#######################################################
+#
+# Test checking if a file can be copied from a local source
+#
+#######################################################
+
+bundle common acc_path
+{
+  vars:
+    "root" string => getenv("NCF_TESTS_ACCEPTANCE", 1024);
+}
+
+body common control
+{
+      inputs => { "${acc_path.root}/default.cf.sub", "${acc_path.root}/default_ncf.cf.sub", "@{ncf_inputs.default_files}" };
+      bundlesequence  => { configuration, default("${this.promise_filename}") };
+      version => "1.0";
+}
+
+#######################################################
+
+bundle agent init
+{
+  vars:
+    "tmp"                 string => getenv("TEMP", 1024);
+
+    ## Copy a single file, create the containing folder
+    "source_file[0]"      string => "${this.promise_filename}";
+    "destination_file[0]" string => "${tmp}/0/destination_test_0";
+    "expected_result[0]"  string => "repaired";
+    "recursion[0]"        string => "0";
+    "mode[0]"             string => "enforce";
+
+    # Redo the #0, expect a success, recursion change is needed
+    # otherwise the bundle call will be skipped
+    "source_file[1]"      string => "${this.promise_filename}";
+    "destination_file[1]" string => "${tmp}/0/destination_test_0";
+    "expected_result[1]"  string => "success";
+    "recursion[1]"        string => "inf";
+    "mode[1]"             string => "enforce";
+
+    ## Copy a folder structure, create the containing folder
+    "source_file[2]"      string => "${this.promise_dirname}";
+    "destination_file[2]" string => "${tmp}/2/";
+    "expected_result[2]"  string => "repaired";
+    "recursion[2]"        string => "99";
+    "mode[2]"             string => "enforce";
+    # Redo the #2, expect a success
+    # otherwise the bundle call will be skipped
+    "source_file[3]"      string => "${this.promise_dirname}";
+    "destination_file[3]" string => "${tmp}/2/";
+    "expected_result[3]"  string => "success";
+    "recursion[3]"        string => "inf";
+    "mode[3]"             string => "enforce";
+
+    ## Try to copy a non-existing file
+    "source_file[4]"      string => "/file/that/does/not/exist";
+    "destination_file[4]" string => "${tmp}/4/destination_test_4";
+    "expected_result[4]"  string => "error";
+    "recursion[4]"        string => "0";
+    "mode[4]"             string => "enforce";
+
+    #### Audit
+    ## Destination is pre-copied
+    "source_file[10]"      string => "${this.promise_filename}";
+    "destination_file[10]" string => "${tmp}/destination_test_10";
+    "expected_result[10]"  string => "success";
+    "recursion[10]"        string => "inf";
+    "mode[10]"             string => "audit";
+
+    "source_file[11]"      string => "${this.promise_filename}";
+    "destination_file[11]" string => "${tmp}/file_not_created";
+    "expected_result[11]"  string => "error";
+    "recursion[11]"        string => "inf";
+    "mode[11]"             string => "audit";
+
+    "indices"               slist => getindices("source_file");
+    "success_indices"       slist => { "10" };
+
+    # Pre-copy some files in the temp folder to test success
+    files:
+     "${destination_file[${success_indices}]}"
+       copy_from => local_cp("${source_file[${success_indices}]}");
+}
+
+#######################################################
+
+bundle agent test
+{
+  vars:
+    "args${init.indices}" slist => { "${init.source_file[${init.indices}]}", "${init.destination_file[${init.indices}]}", "${init.recursion[${init.indices}]}" };
+
+  methods:
+    "ph0"     usebundle => apply_gm("file_from_local_source_recursion", @{args0},  "${init.expected_result[0]}",  "ph0",  "${init.mode[0]}" );
+    "ph1"     usebundle => apply_gm("file_from_local_source_recursion", @{args1},  "${init.expected_result[1]}",  "ph1",  "${init.mode[1]}" );
+    "ph2"     usebundle => apply_gm("file_from_local_source_recursion", @{args2},  "${init.expected_result[2]}",  "ph2",  "${init.mode[2]}" );
+    "ph3"     usebundle => apply_gm("file_from_local_source_recursion", @{args3},  "${init.expected_result[3]}",  "ph3",  "${init.mode[3]}" );
+    "ph4"     usebundle => apply_gm("file_from_local_source_recursion", @{args4},  "${init.expected_result[4]}",  "ph4",  "${init.mode[4]}" );
+
+    "ph10"     usebundle => apply_gm("file_from_local_source_recursion", @{args10},  "${init.expected_result[10]}",  "ph10",  "${init.mode[10]}" );
+    "ph11"     usebundle => apply_gm("file_from_local_source_recursion", @{args11},  "${init.expected_result[11]}",  "ph11",  "${init.mode[11]}" );
+}
+
+#######################################################
+
+bundle agent check
+{
+  vars:
+    "hash_source[${init.indices}]"      string => execresult("${ncf_paths.path[find]} ${init.source_file[${init.indices}]} -type f -exec md5sum '{}' +| ${ncf_paths.path[cut]} -d' ' -f1 | md5sum", "useshell");
+    "hash_destination[${init.indices}]" string => execresult("${ncf_paths.path[find]} ${init.destination_file[${init.indices}]} -type f -exec md5sum '{}' +| ${ncf_paths.path[cut]} -d' ' -f1 | md5sum", "useshell");
+  classes:
+    "hash_ok_${init.indices}"       expression => strcmp("${hash_source_[${init_indices}]}", "${hash_destination_[${init_indices}]}");
+    "copy_not_ok"                          not => "hash_ok_${init.indices}";
+
+    "ok" expression => "copy_not_ok.ph0_ok.ph1_ok.ph2_ok.ph3_ok.ph4_ok.ph10_ok.ph11_ok";
+
+  reports:
+    ok::
+      "$(this.promise_filename) Pass";
+    !ok::
+      "$(this.promise_filename) FAIL";
+}

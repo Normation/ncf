@@ -22,7 +22,7 @@
 # @parameter source      Source file (absolute path on the target node)
 # @parameter destination Destination file (absolute path on the target node)
 # @parameter recursion   Recursion depth to enforce for this path (0, 1, 2, ..., inf)
-# 
+#
 # @class_prefix file_from_local_source
 # @class_parameter destination
 
@@ -32,40 +32,54 @@ bundle agent file_from_local_source_recursion(source, destination, recursion)
       "old_class_prefix" string => canonify("file_from_local_source_${destination}");
       "args"              slist => { "${source}", "${destination}", "${recursion}" };
       "report_param"      string => join("_", args);
-      "full_class_prefix" string => canonify("file_from_local_source_${report_param}");
+      "full_class_prefix" string => canonify("file_from_local_source_recursion_${report_param}");
       "class_prefix"      string => string_head("${full_class_prefix}", "1000");
+
+      "full_inner_class_prefix" string => canonify("inner_file_from_local_source_recursion_${report_param}");
+      "inner_class_prefix"      string => string_head("${full_inner_class_prefix}", "1000");
 
   classes:
       # depth_search prevents from copying file/symlink
       # so we need to detect if we want to copy a folder or a file
       # If we check if it is a file, the class will always be true
       # event if was in fact a directory. Then, we test if it is a dir.
-      "is_dir_copy"  expression => isdir("${destination}");
+      "is_dir_copy"  expression => isdir("${source}");
       # We won't be able to know if it is really a directory
       # or not before the first iteration
-      "iteration_2"  expression => "iteration_1";
-      "iteration_1"  expression => "any";
+      "pass2"  expression => "pass1";
+      "pass1"  expression => "any";
 
   files:
-   !is_dir_copy::
+    pass2.!is_dir_copy::
       "${destination}"
         copy_from    => ncf_local_cp_method("${source}", "digest"),
-        classes      => classes_generic_two("${old_class_prefix}", "${class_prefix}");
+        classes      => classes_generic("${inner_class_prefix}");
 
-   is_dir_copy::
+    pass2.is_dir_copy::
       "${destination}"
         copy_from    => ncf_local_cp_method("${source}", "digest"),
         depth_search => recurse("${recursion}"),
-        classes      => classes_generic_two("${old_class_prefix}", "${class_prefix}");
+        classes      => classes_generic("${inner_class_prefix}");
 
   methods:
+    # inner classes must be canceled and sanitized to avoid call conflict and
+    # since the ncf_local_cp_method defines too much classes
+    pass1::
+      "cancel"   usebundle => _classes_cancel("${inner_class_prefix}");
+    pass2::
+      "sanitize" usebundle => _classes_sanitize("${inner_class_prefix}");
+
+      "old result classes" usebundle => _classes_copy("${inner_class_prefix}", "${old_class_prefix}"),
+                          ifvarclass => "${inner_class_prefix}_reached";
+      "new result classes" usebundle => _classes_copy("${inner_class_prefix}", "${class_prefix}"),
+                          ifvarclass => "${inner_class_prefix}_reached";
+
     # The reports should only be made after we know if this is a
     # directory (to apply recursion) or a file
-    iteration_2.!is_dir_copy::
-      "report"
-        usebundle  => _log_v3("Copying ${destination} from ${source}", "${destination}", "${old_class_prefix}", "${class_prefix}", @{args});
-
-    iteration_2.is_dir_copy::
-      "report"
-        usebundle  => _log_v3("Copying ${destination} from local ${source}, recursion level ${recursion}", "${destination}", "${old_class_prefix}", "${class_prefix}", @{args});
+      "report file"
+        usebundle    => _log_v3("Copying ${destination} from ${source}", "${destination}", "${old_class_prefix}", "${class_prefix}", @{args}),
+          ifvarclass => "!is_dir_copy";
+      "report directory"
+        usebundle  => _log_v3("Copying ${destination} from local ${source}, recursion level ${recursion}", "${destination}", "${old_class_prefix}", "${class_prefix}", @{args}),
+          ifvarclass => "is_dir_copy";
 }

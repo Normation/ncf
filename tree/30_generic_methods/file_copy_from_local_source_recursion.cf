@@ -24,7 +24,7 @@
 # @parameter source      Source file (absolute path on the target node)
 # @parameter destination Destination file (absolute path on the target node)
 # @parameter recursion   Recursion depth to enforce for this path (0, 1, 2, ..., inf)
-# 
+#
 # @class_prefix file_copy_from_local_source
 # @class_parameter destination
 
@@ -34,14 +34,11 @@ bundle agent file_copy_from_local_source_recursion(source, destination, recursio
       "old_class_prefix"  string => canonify("file_copy_from_local_source_${destination}");
       "args"               slist => { "${source}", "${destination}", "${recursion}" };
       "report_param"      string => join("_", args);
-      "full_class_prefix" string => canonify("file_copy_from_local_source_${report_param}");
+      "full_class_prefix" string => canonify("file_copy_from_local_source_recursion_${report_param}");
       "class_prefix"      string => string_head("${full_class_prefix}", "1000");
 
-      "full_inner_class_prefix" string => canonify("file_from_local_source_${report_param}");
+      "full_inner_class_prefix" string => canonify("file_from_local_source_recursion_${report_param}");
       "inner_class_prefix"      string => string_head("${full_inner_class_prefix}", "1000");
-
-      "canonified_file"    string => canonify("${destination}");
-
 
   classes:
       "should_report"    expression => "${report_data.should_report}";
@@ -53,9 +50,13 @@ bundle agent file_copy_from_local_source_recursion(source, destination, recursio
       "reenable_reporting_${class_prefix}"
                            usebundle => enable_reporting,
                           ifvarclass => "should_report";
-      "class copy"         usebundle => _classes_copy("file_from_local_source_${canonified_file}", "${old_class_prefix}"),
-                          ifvarclass => "file_from_local_source_${canonified_file}_reached";
+
+      "old result classes" usebundle => _classes_copy("${inner_class_prefix}", "${old_class_prefix}"),
+                          ifvarclass => "${inner_class_prefix}_reached";
       "new result classes" usebundle => _classes_copy("${inner_class_prefix}", "${class_prefix}"),
                           ifvarclass => "${inner_class_prefix}_reached";
-      "report"            usebundle  => _log_v3("Copying ${destination} from local ${source}, recursion level ${recursion}", "${destination}", "${old_class_prefix}", "${class_prefix}", @{args});
+
+      "report"            usebundle  => _log_v3("Copying ${destination} from local ${source}, recursion level ${recursion}", "${destination}", "${old_class_prefix}", "${class_prefix}", @{args}),
+                          ifvarclass => "${inner_class_prefix}_reached";
+
 }

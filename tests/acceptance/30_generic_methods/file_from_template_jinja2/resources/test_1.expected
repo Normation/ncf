@@ -1,0 +1,16 @@
+Same template but with extra specials characters such
+as äeiöü
+my var is test_value
+
+I can iterate over:
+
+
+display test1
+
+display test2
+
+
+
+display this
+
+

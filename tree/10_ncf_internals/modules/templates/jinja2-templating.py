@@ -2,13 +2,7 @@
 # vim: syntax=python
 ''':'
 # First try to run this script with python3, else run with python
-if command -v python3 >/dev/null 2>/dev/null && python3 -c "import jinja2" >/dev/null 2>/dev/null; then
-  exec python3 "$0" "$@"
-elif command -v python >/dev/null 2>/dev/null && python2 -c "import jinja2" >/dev/null 2>/dev/null; then
-  exec python  "$0" "$@"
-else
-  exec python2 "$0" "$@"
-fi
+  exec python2  "$0" "$@"
 '''
 
 #####################################################################################
@@ -102,10 +96,10 @@ def render(opts, args):
             env.tests.update(CUSTOM_TESTS)
     sys.path.pop()
 
-    output = env.get_template(os.path.basename(template_path)).render(data)
+    output = env.get_template(os.path.basename(template_path)).render(data).encode("utf-8")
 
-    if not PY3:
-        output = output.decode("utf-8")
+    #if not PY3:
+    #    output = output.decode("utf-8")
 
     sys.stdout.write(output)
 

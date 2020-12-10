@@ -1,0 +1,190 @@
+####################################################################################
+# Copyright 2016 Normation SAS
+#####################################################################################
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, Version 3.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#
+#####################################################################################
+
+# agent_version >= 3.9
+
+#######################################################
+#
+# Test checking if a file can be generated from a local template
+#
+#######################################################
+
+bundle common acc_path
+{
+  vars:
+    "root" string => getenv("NCF_TESTS_ACCEPTANCE", 1024);
+}
+
+body common control
+{
+      inputs => { "${acc_path.root}/default.cf.sub", "${acc_path.root}/default_ncf.cf.sub", "@{ncf_inputs.default_files}" };
+      bundlesequence  => { configuration, initialization, default("${this.promise_filename}") };
+      version => "1.0";
+}
+
+#######################################################
+
+bundle agent init
+{
+  vars:
+    "tmp"                 string => getenv("TEMP", 1024);
+    # An empty expected_file means that no destination file is expected to be created
+    # TODO test if intermediate files are correctly removed
+
+    "source_template[0]"  string => "${this.promise_dirname}/resources/test_0.source";
+    "destination_file[0]" string => "${tmp}/destination_0";
+    "expected_file[0]"    string => "${this.promise_dirname}/resources/test_0.expected";
+    "expected_result[0]"  string => "repaired";
+    "mode"                string => "enforce";
+
+    # Unicode chars
+    "source_template[1]"  string => "${this.promise_dirname}/resources/test_1.source";
+    "destination_file[1]" string => "${tmp}/destination_1";
+    "expected_file[1]"    string => "${this.promise_dirname}/resources/test_1.expected";
+    "expected_result[1]"  string => "repaired";
+    "mode"                string => "enforce";
+
+    "source_template[2]"  string => "${this.promise_dirname}/resources/test_2.source";
+    "destination_file[2]" string => "${tmp}/destination_2";
+    "expected_file[2]"    string => "${this.promise_dirname}/resources/test_2.expected";
+    "expected_result[2]"  string => "repaired";
+    "mode"                string => "enforce";
+
+    # undefined variable
+    "source_template[3]"  string => "${this.promise_dirname}/resources/test_3.source";
+    "destination_file[3]" string => "${tmp}/destination_3";
+    "expected_file[3]"    string => "";
+    "expected_result[3]"  string => "error";
+    "mode"                string => "enforce";
+
+    # non existing source file
+    "source_template[4]"  string => "${this.promise_dirname}/resources/test_4_that_do_not_exist";
+    "destination_file[4]" string => "${tmp}/destination_4";
+    "expected_file[4]"    string => "";
+    "expected_result[4]"  string => "error";
+    "mode"                string => "enforce";
+
+    # Creating folder path containing destination file
+    "source_template[5]"  string => "${this.promise_dirname}/resources/test_5.source";
+    "destination_file[5]" string => "${tmp}/5/destination_5";
+    "expected_file[5]"    string => "${this.promise_dirname}/resources/test_5.expected";
+    "expected_result[5]"  string => "repaired";
+    "mode"                string => "enforce";
+
+    # Success test
+    "source_template[6]"  string => "${this.promise_dirname}/resources/test_6.source";
+    "destination_file[6]" string => "${tmp}/6/destination_6";
+    "expected_file[6]"    string => "${this.promise_dirname}/resources/test_6.expected";
+    "expected_result[6]"  string => "success";
+    "mode"                string => "enforce";
+
+    # Audit
+    "source_template[10]"  string => "${this.promise_dirname}/resources/test_1.source";
+    "destination_file[10]" string => "${tmp}/destination_10";
+    "expected_file[10]"    string => "";
+    "expected_result[10]"  string => "error";
+    "mode"                 string => "audit";
+
+    "source_template[11]"  string => "${this.promise_dirname}/resources/test_11.source";
+    "destination_file[11]" string => "${tmp}/destination_11";
+    "expected_file[11]"    string => "${this.promise_dirname}/resources/test_11.expected";
+    "expected_result[11]"  string => "success";
+    "mode"                 string => "audit";
+
+    "test_variable"       string => "test_value";
+    "my_list"              slist => { "test1", "test2" };
+
+    "indices"              slist => getindices("source_template");
+    "success_indices"      slist => { "6", "11" };
+
+  classes:
+    "my_global_class" expression => "any", scope => "namespace";
+
+  # Pre-copy some files in the temp folder to test success
+  files:
+   "${destination_file[${success_indices}]}"
+     copy_from => local_cp("${expected_file[${success_indices}]}");
+
+}
+
+#######################################################
+
+bundle agent test
+{
+  vars:
+    "args${init.indices}" slist => { "${init.source_template[${init.indices}]}", "${init.destination_file[${init.indices}]}" };
+
+  methods:
+    "ph0"   usebundle => apply_gm("file_from_template_jinja2", @{args0},  "${init.expected_result[0]}",  "ph0",  "${init.mode[0]}" );
+    "ph1"   usebundle => apply_gm("file_from_template_jinja2", @{args1},  "${init.expected_result[1]}",  "ph1",  "${init.mode[1]}" );
+    "ph2"   usebundle => apply_gm("file_from_template_jinja2", @{args2},  "${init.expected_result[2]}",  "ph2",  "${init.mode[2]}" );
+    "ph3"   usebundle => apply_gm("file_from_template_jinja2", @{args3},  "${init.expected_result[3]}",  "ph3",  "${init.mode[3]}" );
+    "ph4"   usebundle => apply_gm("file_from_template_jinja2", @{args4},  "${init.expected_result[4]}",  "ph4",  "${init.mode[4]}" );
+    "ph5"   usebundle => apply_gm("file_from_template_jinja2", @{args5},  "${init.expected_result[5]}",  "ph5",  "${init.mode[5]}" );
+    "ph6"   usebundle => apply_gm("file_from_template_jinja2", @{args6},  "${init.expected_result[6]}",  "ph6",  "${init.mode[6]}" );
+
+    "ph10"  usebundle => apply_gm("file_from_template_jinja2", @{args10},  "${init.expected_result[10]}",  "ph10",  "${init.mode[10]}" );
+    "ph11"  usebundle => apply_gm("file_from_template_jinja2", @{args11},  "${init.expected_result[11]}",  "ph11",  "${init.mode[11]}" );
+}
+
+#######################################################
+
+bundle agent check
+{
+
+  vars:
+    # Without guarding class it will be executed too soon
+    pass1::
+      "hash_expected_file[${init.indices}]"    string => execresult("/usr/bin/md5sum ${init.expected_file[${init.indices}]} | ${paths.path[cut]} -d' ' -f1", "useshell"),
+        ifvarclass => "!skip_${init.indices}";
+      "hash_destination_file[${init.indices}]" string => execresult("/usr/bin/md5sum ${init.destination_file[${init.indices}]} | ${paths.path[cut]} -d' ' -f1", "useshell"),
+        ifvarclass => "!skip_${init.indices}";
+
+  classes:
+    "pass3"                     expression => "pass2";
+    "pass2"                     expression => "pass1";
+    "pass1"                     expression => "any";
+    "skip_${init.indices}"      expression => strcmp("${init.expected_file[${init.indices}]}", "");
+
+    pass2::
+      "classes_ok"              expression =>  "ph0_ok.ph1_ok.ph2_ok.ph3_ok.ph4_ok.ph5_ok.ph6_ok.ph10_ok.ph11_ok";
+
+      # Test if files destination file are modified as expected
+      "file_ok_${init.indices}" expression => strcmp("${hash_expected_file[${init.indices}]}", "${hash_destination_file[${init.indices}]}"),
+                                ifvarclass => "!skip_${init.indices}";
+      # Test if files in error are not created
+      "file_ok_${init.indices}"        not => fileexists("${init.destination_file[${init.indices}]}"),
+                                ifvarclass => "skip_${init.indices}";
+
+      "files_not_ok"                   not => "file_ok_${init.indices}";
+
+      "ok"                      expression => "classes_ok.!files_not_ok";
+
+  reports:
+   pass3::
+    "FAIL test ${init.indices}: '${hash_expected_file[${init.indices}]}' != '${hash_destination_file[${init.indices}]}'
+${init.expected_file[${init.indices}]} != ${init.destination_file[${init.indices}]}"
+      ifvarclass => "!file_ok_${init.indices}.!skip_${init.indices}";
+    "FAIL test ${init.indices}: file ${init.destination_file[${init.indices}]} should not be created"
+      ifvarclass => "!file_ok_${init.indices}.skip_${init.indices}";
+    pass3.ok::
+      "$(this.promise_filename) Pass";
+    pass3.!ok::
+      "$(this.promise_filename) Fail";
+
+}

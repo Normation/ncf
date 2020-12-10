@@ -23,17 +23,20 @@ bundle agent init
 {
   vars:
     "tmp"                    string => getenv("TEMP", 1024);
-    "source_file"            string => "${tmp}/source_test";
-    "destination_file"       string => "${tmp}/destination_test";
-    "destination_file_canon" string => canonify("${destination_file}");
-    "recursion"              string => "0";
+    "source_file[0]"      string => "${tmp}/source_test_0";
+    "destination_file[0]" string => "${tmp}/destination_test_0";
+    "expected_result[0]"  string => "repaired";
+    "recursion[0]"        string => "0";
 
-    "mode"                   string => "644";
-    "owner"                  string => "root";
-    "group"                  string => "0";
+    "mode"                string => "665";
+    "owner"               string => "root";
+    "group"               string => "0";
+
+
+    "indices" slist => getindices("source_file");
 
   files:
-    "${source_file}"
+    "${source_file[0]}"
       create => "true",
       perms  => mog("${mode}", "${owner}", "${group}");
 
@@ -43,8 +46,11 @@ bundle agent init
 
 bundle agent test
 {
+  vars:
+    "args${init.indices}" slist => { "${init.source_file[${init.indices}]}", "${init.destination_file[0]}", "${init.recursion[${init.indices}]}" };
+
   methods:
-    "ph1" usebundle => file_copy_from_local_source_recursion("${init.source_file}", "${init.destination_file}", "${init.recursion}");
+    "ph0"     usebundle => apply_gm("file_copy_from_local_source_recursion", @{args0},  "${init.expected_result[0]}",  "ph0",  "enforce" );
 }
 
 #######################################################
@@ -53,9 +59,9 @@ bundle agent check
 {
   vars:
     "owner_id"                  int => getuid("${init.owner}");
-    "permissions_test_mode"  string => "/usr/bin/test ${const.dollar}(${test_utils.file_perms} ${init.destination_file}) = \"${init.mode}\"";
-    "permissions_test_owner" string => "/usr/bin/test ${const.dollar}(${test_utils.file_owner} ${init.destination_file}) = \"${owner_id}\"";
-    "permissions_test_group" string => "/usr/bin/test ${const.dollar}(${test_utils.file_group} ${init.destination_file}) = \"${init.group}\"";
+    "permissions_test_mode"  string => "/usr/bin/test ${const.dollar}(${test_utils.file_perms} ${init.destination_file[0]}) = \"${init.mode}\"";
+    "permissions_test_owner" string => "/usr/bin/test ${const.dollar}(${test_utils.file_owner} ${init.destination_file[0]}) = \"${owner_id}\"";
+    "permissions_test_group" string => "/usr/bin/test ${const.dollar}(${test_utils.file_group} ${init.destination_file[0]}) = \"${init.group}\"";
 
   classes:
     # By default, file_copy_from_local_source_type_recursion should create the file if it doesn't exist
@@ -71,7 +77,7 @@ bundle agent check
       expression => returnszero("${permissions_test_group}", "useshell"),
       ifvarclass => canonify("file_copy_from_local_source_${init.destination_file}_reached");
 
-    "ok"                   expression => "permissions_test_mode_ok.permissions_test_owner_ok.permissions_test_group_ok.file_copy_from_local_source_${init.destination_file_canon}_ok.!file_copy_from_local_source_${init.destination_file_canon}_error";
+    "ok"                   expression => "permissions_test_mode_ok.permissions_test_owner_ok.permissions_test_group_ok.ph0_ok";
 
   reports:
     ok::

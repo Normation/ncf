@@ -211,12 +211,11 @@ bundle agent file_from_template_jinja2(source_template, destination)
 {
 
   vars:
-
       "old_class_prefix"  string => canonify("file_from_template_${destination}");
 
       "args"              slist  => { "${source_template}", "${destination}" };
       "report_param"      string => join("_", args);
-      "full_class_prefix" string => canonify("file_from_template_${report_param}");
+      "full_class_prefix" string => canonify("file_from_template_jinja2_${report_param}");
       "class_prefix"      string => string_head("${full_class_prefix}", "1000");
 
       "jinja2_script"     string => "${sys.workdir}/modules/templates/jinja2-templating.py";
@@ -226,17 +225,18 @@ bundle agent file_from_template_jinja2(source_template, destination)
       "destination_tmp"   string => "${source_template}.${this.promiser_pid}.new";
 
 
-      "full_inner_class_prefix" string => canonify("file_copy_from_local_source_${destination_tmp}_${destination}");
+      "full_inner_class_prefix" string => canonify("file_from_local_source_recursion_${destination_tmp}_${destination}_0");
       "inner_class_prefix"      string => string_head("${full_inner_class_prefix}", "1000");
 
       # Here we put the output into the errors variable. As the stdout is sent to a file, the output is only stderr,
       # and can be used to check for errors.
-      "errors" string => execresult("${jinja2_script} --strict \"${source_template}\" \"${datastate_file}\" > \"${destination_tmp}\"", "useshell"),
-           ifvarclass => "state_dumped_${destination_canon}_ok";
+      pass2::
+        "errors_${class_prefix}" string => execresult("${jinja2_script} --strict \"${source_template}\" \"${datastate_file}\" > \"${destination_tmp}\"", "useshell"),
+                             ifvarclass => "state_dumped_${class_prefix}_ok";
 
   classes:
       # If the stderr of the python templating command was empty, we consider that the templating succeeeded.
-      "templating_ok" expression => strcmp("${errors}", "");
+      "templating_ok_${class_prefix}" expression => strcmp("${errors_${class_prefix}}", "");
 
       "pass3" expression => "pass2";
       "pass2" expression => "pass1";
@@ -245,41 +245,46 @@ bundle agent file_from_template_jinja2(source_template, destination)
       "should_report"    expression => "${report_data.should_report}";
 
   files:
+    pass2::
       # We can't use the generic method here because we want to avoid file backups
       "${datastate_file}"
         template_method => "mustache",
         create          => "true",
         edit_template   => "${datastate_tpl}",
         edit_defaults   => no_backup,
-        classes         => classes_generic("state_dumped_${destination_canon}");
+        classes         => classes_generic("state_dumped_${class_prefix}");
 
   methods:
-      "disable_reporting_${class_prefix}"     usebundle => disable_reporting;
+    pass1::
+      "disable_reporting_${class_prefix}" usebundle => disable_reporting;
+      "remove_dry_run_mode_for_datadump"  usebundle => push_dry_run_mode("false");
       # Use a file copy to avoid any file size limitations of CFEngine variables.
-    pass2.templating_ok::
-      "copy file"    usebundle => file_copy_from_local_source("${destination_tmp}", "${destination}");
-    pass2.templating_ok::
-      "copy classes"        usebundle => _classes_copy("file_copy_from_local_source_${destination_canon}", "${old_class_prefix}");
-      "copy new classes"    usebundle => _classes_copy("${inner_class_prefix}", "${class_prefix}");
-
+    pass2::
     pass3::
+      "restore dry-run_after_datadump" usebundle => pop_dry_run_mode();
+      "copy file"    usebundle => file_from_local_source_recursion("${destination_tmp}", "${destination}", "0"),
+                    ifvarclass => "templating_ok_${class_prefix}";
+      "copy old classes"    usebundle => _classes_copy("${inner_class_prefix}", "${old_class_prefix}"),
+                           ifvarclass => "templating_ok_${class_prefix}";
+      "copy new classes"    usebundle => _classes_copy("${inner_class_prefix}", "${class_prefix}"),
+                           ifvarclass => "templating_ok_${class_prefix}";
+
       # In non audit mode, we need to force enforce mode to remove the temp files.
-      "remove_dry_run_mode" usebundle => push_dry_run_mode("false");
-      "clean data file"     usebundle => file_absent("${datastate_file}");
-      "clean template file" usebundle => file_absent("${destination_tmp}");
-      "restore dry-run"     usebundle => pop_dry_run_mode();
+      "remove_dry_run_mode_for_cleanup" usebundle => push_dry_run_mode("false");
+      "clean data file"                 usebundle => file_absent("${datastate_file}");
+      "clean template file"             usebundle => file_absent("${destination_tmp}");
+      "restore dry-run_after_cleanup"   usebundle => pop_dry_run_mode();
 
-    pass3::
       "failure" usebundle  => _classes_failure("${old_class_prefix}"),
                 ifvarclass => "!${old_class_prefix}_reached";
       "failure" usebundle  => _classes_failure("${class_prefix}"),
                 ifvarclass => "!${class_prefix}_reached";
 
-      "reenable_reporting_${class_prefix}"    usebundle => enable_reporting,
+      "reenable_reporting_${class_prefix}" usebundle => enable_reporting,
                              ifvarclass => "should_report";
       "report"              usebundle  => _log_v3("Build file ${destination} from jinja2 template ${source_template}", "${destination}", "${old_class_prefix}", "${class_prefix}", @{args});
       # Report errors
-      "report" usebundle  => log_rudder_mode("log_warn", "Jinja templating failed with the following error:${const.endl}${errors}", "${destination}", "${class_prefix}"),
+      "report" usebundle  => log_rudder_mode("log_warn", "Jinja templating failed with the following error:${const.endl}${errors_${class_prefix}}", "${destination}", "${class_prefix}"),
                 ifvarclass => "state_dumped_${destination_canon}_ok.!templating_ok";
 }
 
