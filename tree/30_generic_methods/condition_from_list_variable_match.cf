@@ -1,0 +1,76 @@
+#####################################################################################
+# Copyright 2021 Normation SAS
+#####################################################################################
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, Version 3.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#
+#####################################################################################
+
+# @name Condition from value in list variable
+# @description Create a condition from the match of a regular expression against any item in a variable of type list.
+# @documentation
+# This method defines a condition:
+# * `{condition_prefix}_true` if any item of the variable **Variable name** matches the **Value match**
+# * `{condition_prefix}_false` if no item of the variable **Variable name** matches the **Value match**
+#
+# /!\ Regex for unix machine must be PCRE compatible and those for Windows agent must respect the .Net regex format.
+#
+# @parameter condition Prefix of the condition
+# @parameter variable_name Complete name of the variable being tested, like my_prefix.my_variable. Must be of type list.
+# @parameter value_match Regex to test if an item of the variable matches
+# 
+# @parameter_name condition condition_prefix
+#
+# @class_prefix condition_from_list_variable_match
+# @class_parameter condition
+
+bundle agent condition_from_list_variable_match(condition, variable_name, value_match)
+{
+  vars:
+      "old_class_prefix"  string => canonify("condition_from_list_variable_match_${condition}");
+      "args"               slist => { "${condition}", "${variable_name}", "${value_match}" };
+      "report_param"      string => join("_", args);
+      "full_class_prefix" string => canonify("condition_from_list_variable_match_${report_param}");
+      "class_prefix"      string => string_head("${full_class_prefix}", "1000");
+
+  classes:
+      "pass1" expression => "any";
+      "pass2" expression => "pass1";
+      "pass3" expression => "pass2";
+
+    pass2::
+      "var_exists" expression => isvariable("${variable_name}");
+
+      "${condition}_true"  and => {reglist("${variable_name}", "${value_match}"), "var_exists"},
+                                       scope => "namespace";
+
+      "${condition}_false"  or => {"!${condition}_true", "!var_exists"},
+                                       scope => "namespace";
+
+  methods:
+    pass3::
+      "failure" usebundle => _classes_failure("${old_class_prefix}"),
+        ifvarclass => "!var_exists";
+      "failure" usebundle => _classes_failure("${class_prefix}"),
+        ifvarclass => "!var_exists";
+
+      "success" usebundle => _classes_success("${old_class_prefix}"),
+        ifvarclass => "var_exists";
+      "success" usebundle => _classes_success("${class_prefix}"),
+        ifvarclass => "var_exists";
+
+      "report"  usebundle => _log_v3("Create the condition ${condition}_true from the match of the regular expression pattern ${value_match} against any item in variable of type list (${variable_name})", "${condition}", "${old_class_prefix}", "${class_prefix}", @{args}),
+        ifvarclass => "${condition}_true";
+      "report"  usebundle => _log_v3("Create the condition ${condition}_false from the match of the regular expression pattern ${value_match} against any item in variable of type list (${variable_name})", "${condition}", "${old_class_prefix}", "${class_prefix}", @{args}),
+        ifvarclass => "${condition}_false";
+}
