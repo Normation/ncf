@@ -20,7 +20,7 @@
 # @description Ensure that a service is stopped using the appropriate method
 #
 # @parameter service_name Service
-# 
+#
 # @class_prefix service_stopped
 # @class_parameter service_name
 
@@ -28,9 +28,7 @@ bundle agent service_stopped(service_name)
 {
   vars:
 
-      "canonified_service_name"    string => canonify("${service_name}");
-
-      "old_class_prefix"           string => "service_stopped_${canonified_service_name}";
+      "old_class_prefix"           string => canonify("service_stopped_${service_name}");
 
       "args"                        slist => { "${service_name}" };
       "report_param"               string => join("_", args);
@@ -40,7 +38,7 @@ bundle agent service_stopped(service_name)
       "full_inner_class_prefix_check"   string => canonify("service_check_running_${report_param}");
       "inner_class_prefix_check"        string => string_head("${full_inner_class_prefix_check}", "1000");
 
-      "full_inner_class_prefix_stop"    string => canonify("service_stop_${report_param}");
+      "full_inner_class_prefix_stop"    string => canonify("service_action_${report_param}_stop");
       "inner_class_prefix_stop"         string => string_head("${full_inner_class_prefix_stop}", "1000");
 
   classes:
@@ -56,7 +54,7 @@ bundle agent service_stopped(service_name)
       # If service_check_running has detected a process, it will result in
       # a success, so we have to stop the process
       "stop if running"
-        usebundle  => service_stop("${service_name}"),
+        usebundle  => service_action("${service_name}", "stop"),
         ifvarclass => "${inner_class_prefix_check}_kept";
 
       # If service_check_running has no detected any process, it will not result
@@ -64,7 +62,7 @@ bundle agent service_stopped(service_name)
       "create success class"
         usebundle  => _classes_success("${old_class_prefix}"),
         ifvarclass => "!${inner_class_prefix_check}_kept";
- 
+
      # If service_check_running has detected a process, the process will be
      # stopped and the result class should be the same as this promise.
       "class copy if running"

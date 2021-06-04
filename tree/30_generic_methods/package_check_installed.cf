@@ -37,23 +37,26 @@ bundle agent package_check_installed(package_name)
       "full_class_prefix"       string => canonify("package_check_installed_${report_param}");
       "class_prefix"            string => string_head("${full_class_prefix}", "1000");
 
-      "full_inner_class_prefix" string => canonify("package_install_${package_name}____latest_verify_false");
+      "inner_args"              string => { "${package_name}", "any", "", "", "present", "" };
+      "inner_report_param"      string => join("_", inner_args);
+      "full_inner_class_prefix" string => canonify("ncf_package_${inner_report_param}");
       "inner_class_prefix"      string => string_head("${full_inner_class_prefix}", "1000");
 
   classes:
       "should_report"    expression => "${report_data.should_report}";
 
   methods:
-      "disable_reporting_${class_prefix}"
-                        usebundle => disable_reporting;
+      "disable_reporting"   usebundle => disable_reporting;
+      "remove_dry_run_mode" usebundle => push_dry_run_mode("true");
 
-      "check install with latest version"
-                        usebundle => package_install_version_cmp_update("${package_name}", "==", "latest", "verify", "false");
+      "check install"       usebundle => ncf_package("${package_name}", "any", "", "", "present", "");
 
-      "reenable_reporting_${class_prefix}"    usebundle => enable_reporting,
-                        ifvarclass => "should_report";
-      "copy old classes" usebundle => _classes_copy("${inner_class_prefix}", "${old_class_prefix}");
-      "copy old classes" usebundle => _classes_copy("${inner_class_prefix}", "${class_prefix}");
+      "restore dry-run"     usebundle => pop_dry_run_mode();
+      "reenable_reporting"  usebundle => enable_reporting,
+                           ifvarclass => "should_report";
+
+      "copy old classes"    usebundle => _classes_copy("${inner_class_prefix}", "${old_class_prefix}");
+      "copy classes"        usebundle => _classes_copy("${inner_class_prefix}", "${class_prefix}");
 
       "report"
         usebundle  => _log_v3("Check that package ${package_name} is installed", "${package_name}", "${old_class_prefix}", "${class_prefix}", @{args});

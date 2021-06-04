@@ -1,14 +1,9 @@
 #!/bin/bash
 set -e
 
-test_style()
+test_quick()
 {
-  cd ./tests/style/ && ./testall && cd -
-}
-
-test_unit()
-{
-  cd ./tests/unit/ && ./testall && cd -
+  avocado run tests/quick
 }
 
 test_python()
@@ -25,18 +20,14 @@ test_typos()
 if [ "$1" = "--python" ]; then
   test_python
   exit 0
-elif [ "$1" = "--style" ]; then
-  test_style
-  exit 0
-elif [ "$1" = "--unit" ]; then
-  test_unit
+elif [ "$1" = "--quick" ]; then
+  test_quick
   exit 0
 elif [ "$1" = "--typos" ]; then
   test_typos
   exit 0
 else
   test_python
-  test_style
-  test_unit
+  test_quick
   exit 0
 fi
