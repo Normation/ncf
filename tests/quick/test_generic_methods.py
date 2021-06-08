@@ -15,7 +15,6 @@ import testlib
 import avocado
 
 class TestNcfBundles(avocado.Test):
-#class TestNcfBundles(unittest.TestCase):
     """
     Sanity tests for methods
     """
@@ -25,6 +24,21 @@ class TestNcfBundles(avocado.Test):
         """
         self.methods = testlib.get_methods()
 
+    def test_deprecated_bundle_calls(self):
+        """
+        Methods should not call deprecated methods
+        """
+        deprecated_methods = [x.get_bundle_name()
+                              for x in self.methods if 'deprecated' in x.metadata]
+
+        for method in self.methods:
+            with self.subTest(i=method.path):
+                for line in method.content:
+                    match = re.match(
+                        r'\s*usebundle\s*=>\s*([a-zA-Z_]+)\s*.*$', line, flags=re.UNICODE
+                    )
+                    if match:
+                        self.assertNotIn(match.group(1), deprecated_methods)
     def test_methods_should_have_a_metadata(self):
         """
         Methods should have a metadata
@@ -96,6 +110,18 @@ class TestNcfBundles(avocado.Test):
                 if not skip(method):
                     self.assertTrue(testlib.test_pattern_on_file(method.path, class_prefix_pattern) is not None)
 
+    @avocado.skip('Some methods are still using _log')
+    def test_methods_should_use_latest_logger(self):
+        """
+        Methods should always use the latest logger available
+        Currently not applied since some methods are using _log instead for some reasons
+        """
+        for method in self.methods:
+            logger_pattern = r'.*usebundle\s+=>\s+_log_v3.*'
+            with self.subTest(i=method.path):
+                if not skip(method):
+                    self.assertTrue(testlib.test_pattern_on_file(method.path, logger_pattern) is not None)
+
     def test_methods_should_not_contain_unescaped_chars(self):
         """
         Test if the documentation fields contain unescaped dollar characters that would break pdflatex
@@ -105,6 +131,17 @@ class TestNcfBundles(avocado.Test):
             with self.subTest(i=method.path):
                 if 'documentation' in method.metadata:
                     self.assertFalse(check_backquotes.match(method.metadata['documentation']))
+
+    def test_methods_name_should_be_bundle_name(self):
+        """
+        Methods filename should be base on their name
+        """
+        for method in self.methods:
+            with self.subTest(i=method.path):
+                bundle_name = method.get_bundle_name()
+                filename = method.path_basename
+                compared_filename = re.sub(r'[0-9]+', '', filename)
+                self.assertTrue(bundle_name == compared_filename, '\nbundle_name = %s\n  filename = %s'%(bundle_name, filename))
 
     @avocado.skip('Lots of methods are not correct atm')
     def test_methods_name_should_be_class_prefix(self):
@@ -117,6 +154,49 @@ class TestNcfBundles(avocado.Test):
                 path = method.path_basename
                 self.assertTrue(class_prefix == path, '\nprefix = %s\n  path = %s'%(class_prefix, path))
 
+    def test_methods_shouldi_not_use_deprecated_loggers(self):
+        """
+        Methods should never use deprecated helper bundles/bodies
+        """
+        deprecated_bundles = ['_logger_default', '_logger']
+        deprecated_bodies = [
+            'do_if_immediate',
+            'classes_generic_return_codes',
+            'kept_if_else',
+            'kept_if_else_persist',
+            'ncf_ensure_section_content',
+            'rudder_delete_if_not_in_list',
+            'rudder_section_selector',
+            'rudder_empty_select',
+            'noempty_backup',
+            'empty_backup',
+            'cp',
+            'rudder_copy_from',
+            'copy_digest',
+            'u_p',
+            'rudder_common_minutes_old',
+            'rudder_debian_knowledge',
+            'rudder_rpm_knowledge',
+            'yum_rpm_no_version',
+            'redhat_local_install',
+            'redhat_install',
+            'debian_local_install',
+            'ncf_generic',
+            'ncf_generic_version',
+            'apt_get_version',
+            'rudder_rug',
+            'rudder_yum',
+            'cron_bin'
+        ]
+        for method in self.methods:
+            with self.subTest(i=method.path):
+                bodies_matching = [x for x in deprecated_bodies if '"%s"'%x in method.raw_content]
+                self.assertEqual(bodies_matching, [], "%s contains deprecated bodies %s"%(method.path, bodies_matching))
+
+                bundle_regex = '(' + '|'.join(deprecated_bundles) + ')'
+                bundle_pattern = r'.*usebundle\s+=>\s+%s.*'%bundle_regex
+                matches = re.findall(bundle_pattern, method.raw_content, flags=re.UNICODE)
+                self.assertEqual(matches, [], method.path + ' contains deprecated bundles ' + str(matches))
 
 ### Helper functions
 def skip(method):
@@ -134,6 +214,3 @@ def skip(method):
         pass
     return result
 
-#if __name__ == '__main__':
-#    #unittest.main()
-#    main()

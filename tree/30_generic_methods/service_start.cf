@@ -24,7 +24,7 @@
 # @documentation See [service_action](#_service_action) for documentation.
 #
 # @parameter name Name of the service
-# 
+#
 # @parameter_name name service_name
 #
 # @class_prefix service_start

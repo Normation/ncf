@@ -20,7 +20,7 @@
 # @description Ensure that a service is stopped using the appropriate method
 #
 # @parameter name Service
-# 
+#
 # @parameter_name name service_name
 #
 # @class_prefix service_stopped
@@ -30,9 +30,7 @@ bundle agent service_stopped(name)
 {
   vars:
 
-      "canonified_name"    string => canonify("${name}");
-
-      "old_class_prefix"           string => "service_stopped_${canonified_name}";
+      "old_class_prefix"           string => canonify("service_stopped_${name}");
 
       "args"                        slist => { "${name}" };
       "report_param"               string => join("_", args);
@@ -42,7 +40,7 @@ bundle agent service_stopped(name)
       "full_inner_class_prefix_check"   string => canonify("service_check_running_${report_param}");
       "inner_class_prefix_check"        string => string_head("${full_inner_class_prefix_check}", "1000");
 
-      "full_inner_class_prefix_stop"    string => canonify("service_stop_${report_param}");
+      "full_inner_class_prefix_stop"    string => canonify("service_action_${report_param}_stop");
       "inner_class_prefix_stop"         string => string_head("${full_inner_class_prefix_stop}", "1000");
 
   classes:
@@ -58,7 +56,7 @@ bundle agent service_stopped(name)
       # If service_check_running has detected a process, it will result in
       # a success, so we have to stop the process
       "stop if running"
-        usebundle  => service_stop("${name}"),
+        usebundle  => service_action("${name}", "stop"),
         ifvarclass => "${inner_class_prefix_check}_kept";
 
       # If service_check_running has no detected any process, it will not result
@@ -66,7 +64,7 @@ bundle agent service_stopped(name)
       "create success class"
         usebundle  => _classes_success("${old_class_prefix}"),
         ifvarclass => "!${inner_class_prefix_check}_kept";
- 
+
      # If service_check_running has detected a process, the process will be
      # stopped and the result class should be the same as this promise.
       "class copy if running"
