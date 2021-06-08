@@ -39,7 +39,7 @@ bundle agent package_check_installed(name)
       "full_class_prefix"       string => canonify("package_check_installed_${report_param}");
       "class_prefix"            string => string_head("${full_class_prefix}", "1000");
 
-      "inner_args"              string => { "${name}", "any", "", "", "present", "" };
+      "inner_args"               slist => { "${name}", "any", "", "", "present", "" };
       "inner_report_param"      string => join("_", inner_args);
       "full_inner_class_prefix" string => canonify("ncf_package_${inner_report_param}");
       "inner_class_prefix"      string => string_head("${full_inner_class_prefix}", "1000");
