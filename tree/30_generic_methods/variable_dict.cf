@@ -23,9 +23,11 @@
 # Be careful that using a global variable can lead to unpredictable content in case of multiple definition, which is implicitly the case when a technique has more than one instance (directive). 
 # Please note that only global variables are available within templates.
 #
-# @parameter variable_prefix The prefix of the variable name
-# @parameter variable_name   The variable to define, the full name will be variable_prefix.variable_name
-# @parameter value           The variable content in JSON format
+# @parameter            variable_prefix The prefix of the variable name
+# @parameter_constraint variable_prefix "regex" : "^[A-z0-9_]+$"
+# @parameter            variable_name   The variable to define, the full name will be variable_prefix.variable_name
+# @parameter_constraint variable_name "regex" : "^[A-z0-9_]+$"
+# @parameter            value           The variable content in JSON format
 # 
 # @class_prefix variable_dict
 # @class_parameter variable_name

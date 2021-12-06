@@ -48,10 +48,12 @@
 #
 # You will be able to access the `value1` value with `${prefix.var[key1]}`.
 # 
-# @parameter variable_prefix The prefix of the variable name
-# @parameter variable_name   The variable to define, the full name will be variable_prefix.variable_name
-# @parameter file_name       The file name to load data from
-# @parameter file_type       The file type, can be "JSON", "CSV", "YAML" or "auto" for auto detection based on file extension, with a fallback to JSON (default is "auto")
+# @parameter            variable_prefix The prefix of the variable name
+# @parameter_constraint variable_prefix "regex" : "^[A-z0-9_]+$"
+# @parameter            variable_name   The variable to define, the full name will be variable_prefix.variable_name
+# @parameter_constraint variable_name "regex" : "^[A-z0-9_]+$"
+# @parameter            file_name       The file name to load data from
+# @parameter            file_type       The file type, can be "JSON", "CSV", "YAML" or "auto" for auto detection based on file extension, with a fallback to JSON (default is "auto")
 # @parameter_constraint file_type "allow_empty_string" : true
 # @parameter_constraint file_type "select" : [ "", "auto", "JSON", "YAML", "CSV" ]
 # 

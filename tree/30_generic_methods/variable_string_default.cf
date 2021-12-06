@@ -23,10 +23,12 @@
 # Be careful that using a global variable can lead to unpredictable content in case of multiple definition, which is implicitly the case when a technique has more than one instance (directive). 
 # Please note that only global variables are available within templates.
 #
-# @parameter variable_prefix The prefix of the variable name
-# @parameter variable_name   The variable to define, the full name will be variable_prefix.variable_name
-# @parameter source_variable The source variable name
-# @parameter default_value   The default value to use if source_variable is not defined
+# @parameter            variable_prefix The prefix of the variable name
+# @parameter_constraint variable_prefix "regex" : "^[A-z0-9_]+$"
+# @parameter            variable_name   The variable to define, the full name will be variable_prefix.variable_name
+# @parameter_constraint variable_name   "regex" : "^[A-z0-9_]+$"
+# @parameter            source_variable The source variable name
+# @parameter            default_value   The default value to use if source_variable is not defined
 # 
 # @class_prefix variable_string_default
 # @class_parameter variable_name

@@ -23,10 +23,12 @@
 # See [variable_dict_merge](#_variable_dict_merge) for usage documentation. The only difference is that this method
 # will not fail if one of the variables do not exist, and will return the other one. If both are undefined, the method will still fail.
 #
-# @parameter variable_prefix The prefix of the variable name
-# @parameter variable_name   The variable to define, the full name will be variable_prefix.variable_name
-# @parameter first_variable  The first variable, which content will be overridden in the resulting variable if necessary (written in the form variable_prefix.variable_name)
-# @parameter second_variable The second variable, which content will override the first in the resulting variable if necessary (written in the form variable_prefix.variable_name)
+# @parameter            variable_prefix The prefix of the variable name
+# @parameter_constraint variable_prefix "regex" : "^[A-z0-9_]+$"
+# @parameter            variable_name   The variable to define, the full name will be variable_prefix.variable_name
+# @parameter_constraint variable_name   "regex" : "^[A-z0-9_]+$"
+# @parameter            first_variable  The first variable, which content will be overridden in the resulting variable if necessary (written in the form variable_prefix.variable_name)
+# @parameter            second_variable The second variable, which content will override the first in the resulting variable if necessary (written in the form variable_prefix.variable_name)
 #
 # 
 # @class_prefix variable_dict_merge_tolerant

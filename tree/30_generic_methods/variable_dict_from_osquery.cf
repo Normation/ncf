@@ -62,9 +62,11 @@
 # 
 # To access this value, use the `${prefix.var1[0][cpu_logical_cores]}` syntax.
 #
-# @parameter variable_prefix The prefix of the variable name
-# @parameter variable_name   The variable to define, the full name will be variable_prefix.variable_name
-# @parameter query           The query to execute (ending with a semicolon)
+# @parameter            variable_prefix The prefix of the variable name
+# @parameter_constraint variable_prefix "regex" : "^[A-z0-9_]+$"
+# @parameter            variable_name   The variable to define, the full name will be variable_prefix.variable_name
+# @parameter_constraint variable_name   "regex" : "^[A-z0-9_]+$"
+# @parameter            query           The query to execute (ending with a semicolon)
 # 
 # @class_prefix variable_dict_from_osquery
 # @class_parameter variable_name
