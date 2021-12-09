@@ -55,9 +55,9 @@
 # ```
 #
 # @parameter            variable_prefix The prefix of the variable name
-# @parameter_constraint variable_prefix "regex" : "^[A-z0-9_]+$"
+# @parameter_constraint variable_prefix "regex" : "^[A-Za-z0-9_]+$"
 # @parameter            variable_name   The variable to define, the full name will be variable_prefix.variable_name
-# @parameter_constraint variable_name   "regex" : "^[A-z0-9_]+$"
+# @parameter_constraint variable_name   "regex" : "^[A-Za-z0-9_]+$"
 # @parameter            path            The path to the file and node label
 # @parameter            lens            The lens specified by the user in case he wants to load a specified lens associated with its file
 # @parameter            file            The file specified by the user in case he wants to load a specified file associated with its lens

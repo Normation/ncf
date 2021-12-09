@@ -62,9 +62,9 @@
 # ```
 #
 # @parameter            variable_prefix The prefix of the variable name
-# @parameter_constraint variable_prefix "regex" : "^[A-z0-9_]+$"
+# @parameter_constraint variable_prefix "regex" : "^[A-Za-z0-9_]+$"
 # @parameter            variable_name   The variable to define, the full name will be variable_prefix.variable_name
-# @parameter_constraint variable_name   "regex" : "^[A-z0-9_]+$"
+# @parameter_constraint variable_name   "regex" : "^[A-Za-z0-9_]+$"
 # @parameter            first_variable  The first variable, which content will be overridden in the resulting variable if necessary (written in the form variable_prefix.variable_name)
 # @parameter            second_variable The second variable, which content will override the first in the resulting variable if necessary (written in the form variable_prefix.variable_name)
 #

@@ -24,9 +24,9 @@
 # Please note that only global variables are available within templates.
 #
 # @parameter            variable_prefix The prefix of the variable name
-# @parameter_constraint variable_prefix "regex" : "^[A-z0-9_]+$"
+# @parameter_constraint variable_prefix "regex" : "^[A-Za-z0-9_]+$"
 # @parameter            variable_name   The variable to define, the full name will be variable_prefix.variable_name
-# @parameter_constraint variable_name   "regex" : "^[A-z0-9_]+$"
+# @parameter_constraint variable_name   "regex" : "^[A-Za-z0-9_]+$"
 # @parameter            value           The variable content
 # 
 # @class_prefix variable_string

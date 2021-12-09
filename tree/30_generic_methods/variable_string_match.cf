@@ -25,7 +25,7 @@
 #  is it recommended to use instead condition_from_variable_match which is designed for it.
 #
 # @parameter variable_name Complete name of the variable being tested, like my_prefix.my_variable
-# @parameter_constraint variable_name "regex" : "^[A-z0-9_\.]+$"
+# @parameter_constraint variable_name "regex" : "^[A-Za-z0-9_\.]+$"
 # @parameter expected_match Regex to use to test if the variable content is compliant
 #
 # @class_prefix variable_string_match
