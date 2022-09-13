@@ -54,7 +54,7 @@ bundle agent report_if_condition(report_message, condition)
   classes:
       "pass2" expression => "pass1";
       "pass1" expression => "any";
-      "local_expression"  expression => "${condition}";
+      "local_expression"  expression => canonify("${condition}");
 
   methods:
    pass2::
