@@ -378,6 +378,8 @@ def parse_technique_methods(technique_file, gen_methods):
             args = [ sanitize_cfpromises_string(arg['value']) for arg in attribute['rval']['arguments']]
           if attribute['rval']['type'] == 'string':
             method_name = attribute['rval']['value']
+          if attribute['rval']['type'] == 'symbol':
+            method_name = attribute['rval']['value']
         # Extract class context from 'ifvarclass'
         elif attribute['lval'] == 'ifvarclass' or attribute['lval'] == 'if':
           # Simple string get its value
