@@ -66,7 +66,7 @@
 # @parameter_constraint until "select" : [ "", "any", "ok" ]
 # @parameter unique_id      To identify the action without losing track if the command changes. Defaults to the command if you don't need it.
 # @parameter_constraint unique_id "allow_empty_string" : true
-# 
+#
 # @class_prefix command_execution_once
 # @class_parameter command
 
@@ -121,11 +121,11 @@ bundle agent command_execution_once(command, ok_codes, until, unique_id)
     # Problem when writing the flag
     pass3.reserved.!set_ok::
       "${report_data.method_id}" usebundle => _classes_failure("${class_prefix}");
-      "${report_data.method_id}" usebundle => _classes_failure("${report_data.method_id}");
+      "${report_data.method_id}" usebundle => _classes_failure("${report_data.report_id}");
 
     pass3.(already_set|already_reserved)::
       "${report_data.method_id}" usebundle => _classes_success("${class_prefix}");
-      "${report_data.method_id}" usebundle => _classes_success("${report_data.method_id}");
+      "${report_data.method_id}" usebundle => _classes_success("${report_data.report_id}");
 
     pass3::
       "${report_data.method_id}" usebundle => _classes_sanitize("${class_prefix}");

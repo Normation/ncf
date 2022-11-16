@@ -257,33 +257,33 @@ bundle agent ncf_services(service, action)
 
   methods:
     pass1.!pass2::
-        "${report_data.method_id}_${service}" usebundle => _classes_cancel("${report_data.method_id}");
+        "${report_data.method_id}_${service}" usebundle => _classes_cancel("${report_data.report_id}");
     #####
     # Actual command - for actions, non using systemd
     #####
     pass2.is_check_action.!is_process_action.method_found.action_ok::
       "${report_data.method_id}" usebundle => _classes_success("${class_prefix}");
-      "${report_data.method_id}" usebundle => _classes_success("${report_data.method_id}");
+      "${report_data.method_id}" usebundle => _classes_success("${report_data.report_id}");
 
     pass2.is_check_action.!is_process_action.method_found.!action_ok::
       "${report_data.method_id}" usebundle => _classes_failure("${class_prefix}");
-      "${report_data.method_id}" usebundle => _classes_failure("${report_data.method_id}");
+      "${report_data.method_id}" usebundle => _classes_failure("${report_data.report_id}");
 
     # Method not found
     pass2.!method_found::
       "${report_data.method_id}" usebundle => _classes_failure("${class_prefix}");
-      "${report_data.method_id}" usebundle => _classes_failure("${report_data.method_id}");
+      "${report_data.method_id}" usebundle => _classes_failure("${report_data.report_id}");
 
     # Classes for process check
     pass2::
       "${report_data.method_id}" usebundle => _classes_failure("${class_prefix}"),
                                         if => "${class_prefix}_checked_not_ok";
-      "${report_data.method_id}" usebundle => _classes_failure("${report_data.method_id}"),
+      "${report_data.method_id}" usebundle => _classes_failure("${report_data.report_id}"),
                                         if => "${class_prefix}_checked_not_ok";
 
       "${report_data.method_id}" usebundle => _classes_success("${class_prefix}"),
                                         if => "${class_prefix}_checked_ok";
-      "${report_data.method_id}" usebundle => _classes_success("${report_data.method_id}"),
+      "${report_data.method_id}" usebundle => _classes_success("${report_data.report_id}"),
                                         if => "${class_prefix}_checked_ok";
 
     # Slackware boot actions
@@ -323,7 +323,7 @@ bundle agent ncf_services(service, action)
     pass2.!is_check_action.!is_process_action.method_found.!(slackware.is_boot_action)::
       "${action_command}"
         contain => in_shell_and_silent,
-        classes => classes_generic_two("${class_prefix}", "${report_data.method_id}");
+        classes => classes_generic_two("${class_prefix}", "${report_data.report_id}");
 
   reports:
     pass3.error.!method_found::

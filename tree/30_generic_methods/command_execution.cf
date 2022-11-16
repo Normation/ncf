@@ -73,7 +73,7 @@ bundle agent command_execution(command)
 
   methods:
     pass3.dry_run::
-      "${report_data.method_id}" usebundle  => _classes_noop("${report_data.method_id}");
+      "${report_data.method_id}" usebundle  => _classes_noop("${report_data.report_id}");
       "${report_data.method_id}" usebundle  => _classes_noop("${class_prefix}");
     pass3::
       "${report_data.method_id}" usebundle  => log_rudder_v4("${command}", "Execute command", "${command}");
@@ -81,5 +81,5 @@ bundle agent command_execution(command)
     pass2.!pass3.!dry_run::
       "${command}"
         contain      => in_shell,
-        classes      => classes_generic_two("${report_data.method_id}", "${class_prefix}");
+        classes      => classes_generic_two("${report_data.report_id}", "${class_prefix}");
 }

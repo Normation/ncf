@@ -47,7 +47,7 @@ bundle agent audit_from_command(command, compliant_codes)
 
   methods:
     pass1.!pass2::
-      "${report_data.method_id}_${command}" usebundle => _classes_cancel("${report_data.method_id}");
+      "${report_data.method_id}_${command}" usebundle => _classes_cancel("${report_data.report_id}");
     pass2.!pass3::
       "${report_data.method_id}_${command}" usebundle  => push_dry_run_mode("false");
     pass3::
@@ -58,6 +58,6 @@ bundle agent audit_from_command(command, compliant_codes)
     pass2.!pass3::
       "${command}"
         contain      => in_shell,
-        classes      => classes_generic_return_code_list_two("${report_data.method_id}", "${class_prefix}", @{compliant_list}, @{empty_list});
+        classes      => classes_generic_return_code_list_two("${report_data.report_id}", "${class_prefix}", @{compliant_list}, @{empty_list});
 }
 

@@ -22,7 +22,7 @@
 # @deprecated Use [service_started](#_service_started) instead.
 #
 # @parameter name Service name (as recognized by systemd, init.d, etc...)
-# 
+#
 #
 # @parameter_rename service_name name
 # @class_prefix service_ensure_running
@@ -40,7 +40,7 @@ bundle agent service_ensure_running(name)
 
   methods:
     pass1.!pass2::
-      "${report_data.method_id}_${name}" usebundle => _classes_cancel("${report_data.method_id}");
+      "${report_data.method_id}_${name}" usebundle => _classes_cancel("${report_data.report_id}");
     pass3::
       "${report_data.method_id}_${name}" usebundle => call_method("service_started");
       "${report_data.method_id}_${name}" usebundle => service_started("${name}");

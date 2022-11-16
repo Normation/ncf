@@ -23,7 +23,7 @@
 #
 # @parameter name Name of the service
 # @parameter expression Condition expression which will trigger the restart of Service "(package_service_installed|service_conf_changed)" by example
-# 
+#
 #
 # @parameter_rename service_name name
 # @parameter_rename trigger_class expression
@@ -51,7 +51,7 @@ bundle agent service_restart_if(name, expression)
       "${report_data.method_id}" usebundle => call_method_end("ncf_services");
     pass3.!should_restart::
       "${report_data.method_id}" usebundle => _classes_success("${class_prefix}");
-      "${report_data.method_id}" usebundle => _classes_success("${report_data.method_id}");
+      "${report_data.method_id}" usebundle => _classes_success("${report_data.report_id}");
     pass3::
       "${report_data.method_id}" usebundle => log_rudder_v4("${name}", "Restart service ${name} (as '${expression}' is defined)", "");
 }

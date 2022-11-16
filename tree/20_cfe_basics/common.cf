@@ -134,7 +134,7 @@ body classes cancel_classes(y)
                         "repair_denied_$(y)", "$(y)_denied", "repair_timeout_$(y)",
                         "$(y)_timeout", "promise_kept_$(y)", "$(y)_kept"
                       };
- 
+
 }
 
 body classes common_classes_exclusive_persist_codes(prefix, persist, keptcodes, repairedcodes, errorcodes)
@@ -353,7 +353,7 @@ bundle agent ncf_classes_copy(source_prefix, destination_prefix)
       "destination_defined" expression => strcmp("${destination_prefix}", "${destination_prefix}");
       "destination_not_empty"      not => strcmp("${destination_prefix}", "");
       "destination_exists"         and => { "destination_defined", "destination_not_empty" };
-      
+
       "pass2"               expression => "pass1";
       "pass1"               expression => "any";
 }
@@ -381,7 +381,7 @@ bundle agent call_method(method) {
       # needs to be called in pass3 as it changes the report_data.method_id which makes it reexecute
       "${report_data.method_id}" usebundle => method_id_push("${method}");
       "${report_data.method_id}" usebundle => disable_reporting;
-  
+
   reports:
     pass3.debug::
       "${configuration.debug} Entering method ${report_data.method_id} (should_report: ${call_method_data.${method_id}_${method}})";
@@ -392,7 +392,7 @@ bundle agent call_method_classes(copy_to_prefix) {
       "prefix"                      string => canonify("${copy_to_prefix}");
 
   methods:
-      "${report_data.method_id}" usebundle => _classes_copy("${report_data.method_id}", "${prefix}");
+      "${report_data.method_id}" usebundle => _classes_copy("${report_data.report_id}", "${prefix}");
 }
 
 # Define on upper level method id
@@ -402,7 +402,7 @@ bundle agent call_method_classes_caller {
       "prefix"             string => canonify(nth("method_id_unique.stack", 0));
 
   methods:
-      "${report_data.method_id}" usebundle => _classes_copy("${report_data.method_id}", "${prefix}");
+      "${report_data.method_id}" usebundle => _classes_copy("${report_data.report_id}", "${prefix}");
 }
 
 bundle agent call_method_end(method) {
@@ -421,7 +421,7 @@ bundle agent call_method_end(method) {
     pass3::
       "${report_data.method_id}_${method}" usebundle => enable_reporting,
                                                   if => "should_report";
-  
+
   reports:
     pass3.debug.should_report::
       "${configuration.debug} Exiting method ${method} from ${report_data.method_id}, should_report: true";

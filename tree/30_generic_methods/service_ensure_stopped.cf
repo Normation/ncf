@@ -22,7 +22,7 @@
 # @deprecated Use [service_stopped](#_service_stopped) instead.
 #
 # @parameter name Service
-# 
+#
 #
 # @parameter_rename service_name name
 # @class_prefix service_ensure_stopped
@@ -40,7 +40,7 @@ bundle agent service_ensure_stopped(name)
 
   methods:
     pass1.!pass2::
-      "${report_data.method_id}_${name}" usebundle => _classes_cancel("${report_data.method_id}");
+      "${report_data.method_id}_${name}" usebundle => _classes_cancel("${report_data.report_id}");
 
     pass3::
       "${report_data.method_id}_${name}" usebundle => call_method("service_stopped");
