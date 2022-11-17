@@ -30,5 +30,5 @@
 bundle agent _classes_copy(source_prefix, destination_prefix)
 {
   methods:
-    "copy" usebundle => ncf_classes_copy("${source_prefix}", "${destination_prefix}");
+    "${report_data.method_id}" usebundle => ncf_classes_copy("${source_prefix}", "${destination_prefix}");
 }

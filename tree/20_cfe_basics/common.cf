@@ -399,7 +399,7 @@ bundle agent call_method_classes(copy_to_prefix) {
 bundle agent call_method_classes_caller {
   vars:
       # First entry is latest inserted
-      "prefix"             string => canonify(nth("method_id_unique.stack", 0));
+      "prefix"             string => canonify(nth("method_id_unique.report_stack", 0));
 
   methods:
       "${report_data.method_id}" usebundle => _classes_copy("${report_data.report_id}", "${prefix}");

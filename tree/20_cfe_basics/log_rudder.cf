@@ -511,8 +511,7 @@ bundle agent _method_reporting_context_v4(c_name, c_key, report_id)
 {
   vars:
     !pass1::
-      "report_data.index_eval" string => eval("${report_data.index}+1");
-      "report_data.index"      int => int("${report_data.index_eval}");
+      "report_data.index"             int => int(eval("${report_data.index}+1", "math", "infix"));
       "report_data.component_name" string => "${c_name}";
       "report_data.component_key"  string => "${c_key}";
       # Non-canonified version, to be used in reports
@@ -528,7 +527,7 @@ bundle agent _method_reporting_context_v4(c_name, c_key, report_id)
     debug::
       "${report_data.method_id}" usebundle => dump_reporting_context;
   classes:
-     "pass1" expression => any;    
+     "pass1" expression => "any";
 }
 
 bundle agent rudder_reporting_context(d_id, r_id, t_name)
@@ -591,7 +590,7 @@ bundle agent dump_reporting_context
 bundle agent clean_method_reporting_context
 {
   vars:
-    "report_data.index"                   string => "0";
+    "report_data.index"                   int => "0";
     "report_data.component_name"          string => "";
     "report_data.component_key"           string => "";
     "report_data.identifier"              string => "";
@@ -604,7 +603,7 @@ bundle agent clean_method_reporting_context
 bundle agent clean_reporting_context
 {
   vars:
-    "report_data.index"                   string => "0";
+    "report_data.index"                   int => "0";
     "report_data.component_name"          string => "";
     "report_data.component_key"           string => "";
     "report_data.technique_name"          string => "";
@@ -917,6 +916,7 @@ bundle agent rudder_method_id_reset() {
   vars:
       "method_id_unique.value" string => "1";
       "method_id_unique.stack" slist  => {};
+      "method_id_unique.report_stack" slist  => {};
 }
 
 # You must call pop_method_id later to remove it.
@@ -927,13 +927,17 @@ bundle agent method_id_push(method_id)
     # this must be evaluated exactly only once
       "canon_method_id"       string => canonify("${method_id}");
     pass3::
-      "old_value"             string => "${report_data.method_id}";
+      "old_value"              string => "${report_data.method_id}";
+      "old_report"             string => "${report_data.report_id}";
       # copy the full slist but disable convergence detection
-      "stack"                  slist => sublist("method_id_unique.stack", "head", "99999");
+      "stack"                   slist => sublist("method_id_unique.stack", "head", "99999");
+      "report_stack"            slist => sublist("method_id_unique.report_stack", "head", "99999");
       # push the old value to the stack
-      "method_id_unique.stack" slist => { "${old_value}", @{stack} };
+      "method_id_unique.stack" slist        => { "${old_value}", @{stack} };
+      "method_id_unique.report_stack" slist => { "${old_report}", @{report_stack} };
       # set new value
       "report_data.method_id" string => "${old_value}_${canon_method_id}";
+      "report_data.report_id" string => "${old_report}_${canon_method_id}";
 
   classes:
       "pass3" expression => "pass2";
@@ -953,16 +957,18 @@ bundle agent method_id_pop()
     !pass1::
       "stack_len"                int => length("method_id_unique.stack");
       "method_id"             string => nth("method_id_unique.stack", "0");
+      "report_id"             string => nth("method_id_unique.report_stack", "0");
 
     # this must be evaluated exactly only once
     pass2::
       # compute stack length minus 1
-      "new_len_float"         string => eval("${stack_len}-1", "math", "infix");
-      "new_len"               string => format("%d", "${new_len_float}");
+      "new_len_float"         int => int(eval("${stack_len}-1", "math", "infix"));
       # remove first value
-      "method_id_unique.stack" slist => sublist("method_id_unique.stack", "tail", "${new_len}");
+      "method_id_unique.stack" slist        => sublist("method_id_unique.stack", "tail", "${new_len}");
+      "method_id_unique.report_stack" slist => sublist("method_id_unique.report_stack", "tail", "${new_len}");
       # set new value
       "report_data.method_id" string => "${method_id}";
+      "report_data.report_id" string => "${report_id}";
 
   classes:
       "pass3" expression => "pass2";
@@ -974,6 +980,9 @@ bundle agent method_id_pop()
       "empty_stack" expression => islessthan("${stack_len}", "0");
 
   methods:
+    pass1.!pass2::
+      "${report_data.method_id}" usebundle => _classes_cancel("${report_data.report_id}");
+
     pass3.empty_stack::
       "${report_data.method_id}" usebundle => _abort("BUG in method-id stack", "pop_method_id was called more times than push_method_id. Stopping immediately to prevent any unwanted behavior.");
 
