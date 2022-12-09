@@ -17,10 +17,22 @@
 #####################################################################################
 
 # Constants definitions
-bundle common ncf_const
+bundle common rudder_const
 {
   vars:
-      "s" string => " ";
+      "dollar" string => "${const.dollar}";
+      "dirsep" string => "${const.dirsep}";
+      "endl"   string => "${const.endl}";
+      "n"      string => "${const.n}";
+      "r"      string => "${const.r}";
+      "t"      string => "${const.t}";
+      "s"      string => " ";
+}
+
+bundle commin ncf_const
+{
+  vars:
+      "s" string => "${rudder_const.s}";
 }
 
 # Don't do anything if class warn is defined, or remediate the promises
