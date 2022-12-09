@@ -29,7 +29,7 @@ bundle common rudder_const
       "s"      string => " ";
 }
 
-bundle commin ncf_const
+bundle common ncf_const
 {
   vars:
       "s" string => "${rudder_const.s}";
