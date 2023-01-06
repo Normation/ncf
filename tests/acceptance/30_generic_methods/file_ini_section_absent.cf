@@ -1,0 +1,219 @@
+#######################################################
+#
+# Test checking if a section is absent in file
+#
+#######################################################
+
+bundle common acc_path
+{
+  vars:
+    "root" string => getenv("NCF_TESTS_ACCEPTANCE", 1024);
+}
+
+body common control
+{
+      inputs => { "${acc_path.root}/default.cf.sub", "${acc_path.root}/default_ncf.cf.sub", "@{ncf_inputs.default_files}" };
+      bundlesequence  => { configuration, default("${this.promise_filename}") };
+      version => "1.0";
+}
+
+#######################################################
+bundle agent init
+{
+  vars:
+    "tmp"         string => getenv("TEMP", 1024);
+
+  ## REPAIRED
+    # Simple removal
+    "file[0]"     string => "${tmp}/test0.ini";
+    "section[0]"  string => "section1";
+    "status[0]"   string => "repaired";
+    "initial[0]"  string => "[section1]
+foo";
+    "expected[0]" string => "";
+
+    # Simple removal ok middle section
+    "file[1]"     string => "${tmp}/test1.ini";
+    "section[1]"  string => "section1";
+    "status[1]"   string => "repaired";
+    "initial[1]"  string => "[section0]
+some nice content
+[section1]
+foo
+[section2]
+foobar";
+    "expected[1]" string => "[section0]
+some nice content
+[section2]
+foobar";
+
+    # remove first section with line already present in other sections
+    "file[2]"     string => "${tmp}/test2.ini";
+    "section[2]"  string => "section0";
+    "status[2]"   string => "repaired";
+    "initial[2]"  string => "[section0]
+some nice content
+bar
+[section1]
+some nice content
+bar
+[section2]
+foobar";
+    "expected[2]" string => "[section1]
+some nice content
+bar
+[section2]
+foobar";
+
+    # Remove last section
+    "file[3]"     string => "${tmp}/test3.ini";
+    "section[3]"  string => "section2";
+    "status[3]"   string => "repaired";
+    "initial[3]"  string => "[section1]
+foo
+bar
+foobar
+[section1]
+some nice content
+bar
+[section2]
+foobar";
+    "expected[3]" string => "[section1]
+foo
+bar
+foobar
+[section1]
+some nice content
+bar";
+
+  ## Non compliant: audit & section present
+    "file[4]"     string => "${tmp}/test4.ini";
+    "section[4]"  string => "section1";
+    "status[4]"   string => "error";
+    "initial[4]"  string => "[section0]
+some nice content
+[section1]
+foo
+[section2]
+foobar";
+    "expected[4]" string => "${initial[4]}";
+
+  ## SUCCESS - section not present
+    "file[5]"     string => "${tmp}/test5.ini";
+    "section[5]"  string => "section2";
+    "line[5]"     string => "bar";
+    "status[5]"   string => "success";
+    "initial[5]"  string => "[section1]
+foo
+bar";
+    "expected[5]" string => "${initial[5]}";
+
+    "file[6]"     string => "${tmp}/test6.ini";
+    "section[6]"  string => "section1";
+    "line[6]"     string => "bar";
+    "status[6]"   string => "success";
+    "initial[6]"  string => "[section0]
+some nice content
+section1
+[section2]
+foobar";
+    "expected[6]" string => "${initial[6]}";
+
+  ## Compliant, section not present
+    "file[7]"     string => "${tmp}/test7.ini";
+    "section[7]"  string => "section2";
+    "line[7]"     string => "bar";
+    "status[7]"   string => "success";
+    "initial[7]"  string => "[section1]
+foo
+bar";
+    "expected[7]" string => "${initial[5]}";
+    
+  ## Others
+  # In a non existing file
+    "file[10]"     string => "${tmp}/test10.ini";
+    "section[10]"  string => "section1";
+    "status[10]"   string => "success";
+    "expected[10]" string => "";
+
+
+    "indices"     slist => getindices("status");
+
+  files:
+    "${file[${indices}]}"
+      create => "true",
+      edit_line => insert_lines("${initial[${indices}]}"),
+      edit_defaults => empty,
+      unless => strcmp("${indices}", "10");
+}
+
+#######################################################
+
+bundle agent test
+{
+  vars:
+    "args${init.indices}" slist => { "${init.file[${init.indices}]}", "${init.section[${init.indices}]}"};
+
+  methods:
+    # Enforce
+    "ph0" usebundle  => apply_gm("file_ini_section_absent", @{args0}, "${init.status[0]}", "ph0", "enforce" );
+    "ph1" usebundle  => apply_gm("file_ini_section_absent", @{args1}, "${init.status[1]}", "ph1", "enforce" );
+    "ph2" usebundle  => apply_gm("file_ini_section_absent", @{args2}, "${init.status[2]}", "ph2", "enforce" );
+    "ph3" usebundle  => apply_gm("file_ini_section_absent", @{args3}, "${init.status[3]}", "ph3", "enforce" );
+    "ph4" usebundle  => apply_gm("file_ini_section_absent", @{args4}, "${init.status[4]}", "ph4", "audit" );
+    "ph5" usebundle  => apply_gm("file_ini_section_absent", @{args5}, "${init.status[5]}", "ph5", "enforce" );
+    "ph6" usebundle  => apply_gm("file_ini_section_absent", @{args6}, "${init.status[6]}", "ph6", "enforce" );
+    "ph7" usebundle  => apply_gm("file_ini_section_absent", @{args7}, "${init.status[7]}", "ph7", "audit" );
+    "ph10" usebundle  => apply_gm("file_ini_section_absent", @{args10}, "${init.status[10]}", "ph10", "enforce" );
+}
+
+#######################################################
+
+bundle agent check
+{
+  vars:
+    pass1::
+      "indices" slist => { @{init.indices} };
+      
+      # function readfile adds an extra trailing newline if there is no trailing newline, too inconsistent
+      "content[${indices}]" string => execresult("${paths.cat} ${init.file[${indices}]}", "noshell"),
+                            unless => strcmp("${indices}", "10");
+
+  classes:
+      "pass3" expression => "pass2";
+      "pass2" expression => "pass1";
+      "pass1" expression => "any";
+
+    pass2::
+      # file 10 is non existant
+      "content_ok_${indices}" expression => and(
+                                            strcmp("${content[${indices}]}", "${init.expected[${indices}]}"),
+                                            fileexists("${init.file[${indices}]}")
+                                          ),
+                                  unless => strcmp("${indices}", "10");
+      "content_ok_10" expression => "any";
+
+      "content_not_ok" expression => "!content_ok_${indices}";
+      "classes_ok"     expression => "ph0_ok.ph1_ok.ph2_ok.ph3_ok.ph4_ok.ph5_ok.ph6_ok.ph7_ok.ph10_ok";
+      "ok"             expression => "!content_not_ok.classes_ok";
+
+
+  reports:
+    pass3::
+      "###########################
+ERROR test ${indices} in
+${init.file[${indices}]}
+EXPECTED:
+${init.expected[${indices}]}
+---------------------------
+FOUND:
+${content[${indices}]}
+###########################"
+         ifvarclass => "!content_ok_${indices}";
+
+    pass3.ok::
+      "$(this.promise_filename) Pass";
+    pass3.!ok::
+      "$(this.promise_filename) FAIL";
+}
+

@@ -1,0 +1,66 @@
+#####################################################################################
+# Copyright 2020 Normation SAS
+#####################################################################################
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, Version 3.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#
+#####################################################################################
+
+# @name File INI section absent
+# @description Ensure that an INI section is absent from a file.
+# It will purge the section, and remove its section header if the section is present.
+#
+# @parameter file File name to edit (absolute path on the target node)
+# @parameter section Name of the INI-style section to remove (not including the [] brackets)
+#
+# @class_prefix file_ini_section_absent
+# @class_parameter file
+
+bundle agent file_ini_section_absent(file, section_name)
+{
+  vars:
+      "old_class_prefix"        string => canonify("file_ini_section_absent_${file}");
+
+      "args"                     slist => { "${file}", "${section_name}" };
+
+      "report_param"            string => join("_", args);
+      "full_class_prefix"       string => canonify("file_ini_section_absent_${report_param}");
+      "class_prefix"            string => string_head("${full_class_prefix}", "1000");
+
+      "canonified_file"         string => canonify("${file}");
+
+
+  classes:
+      # Check if the section exists
+      "section_present"  expression => regline("^\[${section_name}\]$","${file}");
+
+  files:
+      # If the section is present in the file, its content will be removed
+      #  and then the header
+      "${file}"
+        edit_line     => ensure_section_absent("${section_name}"),
+        edit_defaults => ncf_empty_select("false"),
+        ifvarclass    => "section_present",
+        comment       => "Remove section from file",
+        classes       => classes_generic_two("${old_class_prefix}", "${class_prefix}");
+
+
+  methods:
+    !section_present::
+      "success"  usebundle => _classes_success("${class_prefix}");
+      "success"  usebundle => _classes_success("${old_class_prefix}");
+
+    any::
+      "report"   usebundle => _log_v3("Removing section ${section_name} from ${file}", "${file}", "${old_class_prefix}", "${class_prefix}", @{args});
+
+}
