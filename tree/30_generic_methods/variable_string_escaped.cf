@@ -39,7 +39,7 @@
 # ````
 #
 # @parameter variable_name   The variable to define, the full name will be variable_prefix.variable_name
-#
+# @parameter_constraint variable_name "regex" : "^[A-Za-z0-9_\.]+$"
 # @class_prefix variable_string_escaped
 # @class_parameter variable_name
 

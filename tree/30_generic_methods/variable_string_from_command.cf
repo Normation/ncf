@@ -27,9 +27,11 @@
 # report an error otherwise.
 # * The command will be executed even in *Audit mode*
 #
-# @parameter variable_prefix The prefix of the variable name
-# @parameter variable_name   The variable to define, the full name will be variable_prefix.variable_name
-# @parameter command         The command to execute
+# @parameter            variable_prefix The prefix of the variable name
+# @parameter_constraint variable_prefix "regex" : "^[A-Za-z0-9_]+$"
+# @parameter            variable_name   The variable to define, the full name will be variable_prefix.variable_name
+# @parameter_constraint variable_name   "regex" : "^[A-Za-z0-9_]+$"
+# @parameter            command         The command to execute
 #
 # @class_prefix variable_string_from_command
 # @class_parameter variable_name

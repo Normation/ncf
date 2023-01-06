@@ -101,10 +101,12 @@
 #
 # The `prefix.sum` string variable will contain `5` and `prefix.product` will contain `30`.
 #
-# @parameter variable_prefix The prefix of the variable name
-# @parameter variable_name   The variable to define, the full name will be variable_prefix.variable_name
-# @parameter expression      The mathematical expression to evaluate
-# @parameter format          The format string to use
+# @parameter            variable_prefix The prefix of the variable name
+# @parameter_constraint variable_prefix "regex" : "^[A-Za-z0-9_]+$"
+# @parameter            variable_name   The variable to define, the full name will be variable_prefix.variable_name
+# @parameter_constraint variable_name   "regex" : "^[A-Za-z0-9_]+$"
+# @parameter            expression      The mathematical expression to evaluate
+# @parameter            format          The format string to use
 # 
 # @class_prefix variable_string_from_math_expression
 # @class_parameter variable_name
