@@ -1,6 +1,49 @@
 # @name Permissions POSIX ACLs entry parent
-# @description Do stuff
-# @documentation Do stuff
+# @description Ensure ACL on a file or folder and all its parent folders
+# @documentation Ensure ACL on a file or folder and all its parent folders.
+#
+#
+# Force the given ACL on the target `path` (supports globbing).
+#
+# * If `recursive` is set to `true`, the permissions will be applied to
+#   every files and folder under the resolved `path` input.
+# * If the `parent_permissions_*` inputs are not empty, they will be applied to every parent folders
+#   to the resolved `path` input, excepting the root folder `/`.
+# * ACL inputs are expected to be comma separated, and to follow this schema:
+#   * `myuser:wx` to force the ACL entry
+#   * `myuser:+wx` to edit the ACL without enforcing them all
+#
+# If the `path` input resolves to `/this/is/my/path/mylogfile`, parent folders permissions will be applied to:
+# ```
+# /this
+# /this/is
+# /this/is/my
+# /this/is/my/path/
+# ```
+#
+# #### Examples:
+#
+# ```yaml
+# -name: Allows bob to write in its logfile
+#  method: permissions_posix_acl_entry_parent
+#    path: /this/is/my/path/mylogfile
+#    recursive: false
+#    user: "bob:rwx"
+#    parent_permissions_user: "bob:rx"
+#
+# ```
+#
+# ```yaml
+# -name: Allows Bob and Alice to write in its logfile
+#  method: permissions_posix_acl_entry_parent
+#    path: /this/is/my/path/mylogfile
+#    recursive: false
+#    user: "bob:rwx,alice:+rwx"
+#    parent_permissions_user: "bob:rx,alice:rx"
+#
+# ```
+#
+#
 # @parameter path                  Path of the file or directory
 # @parameter recursive             Recursive Should ACLs cleanup be recursive, "true" or "false" (defaults to "false")
 # @parameter user                  User acls, comma separated, like: bob:+rwx, alice:-w
@@ -80,6 +123,7 @@ bundle agent permissions_posix_acl_entry_parent(path, recursive, user, group, ot
       "pass3"                       expression => "pass2";
       "pass2"                       expression => "pass1";
       "pass1"                       expression => "any";
+      "should_report"               expression => "${report_data.should_report}";
       "empty_user"                  expression => strcmp("", "${parent_permissions_user}");
       "empty_group"                 expression => strcmp("", "${parent_permissions_group}");
       "empty_other"                 expression => strcmp("", "${parent_permissions_other}");
@@ -97,7 +141,7 @@ bundle agent permissions_posix_acl_entry_parent(path, recursive, user, group, ot
       "repaired_path"    expression => "${path_class_prefix}_repaired";
       "success_path"     expression => "${path_class_prefix}_kept";
 
-      "success"          expression => "success_path.repaired_path.!(error_parents|error_path)";
+      "success"          expression => "success_path.success_parents.!(error_parents|error_path)";
       "repaired"         expression => "(repaired_path|repaired_parents).!(error_parents|error_path)";
       "error"            expression => "(error_path|error_parents)|!(success|repaired)";
 
@@ -111,6 +155,9 @@ bundle agent permissions_posix_acl_entry_parent(path, recursive, user, group, ot
 
   methods:
     pass2::
+      "disable_reporting_${full_class_prefix}"
+                usebundle => disable_reporting;
+
       "${path}" usebundle => permissions_acl_entry(
                                "${path}",
                                "${recursive}",
@@ -118,6 +165,11 @@ bundle agent permissions_posix_acl_entry_parent(path, recursive, user, group, ot
                                "${group}",
                                "${other}"
                              );
+
+      "reenable_reporting_${full_class_prefix}"
+                usebundle => enable_reporting,
+                       if => "should_report";
+
     pass3::
       "repaired" usebundle => _classes_repaired("${prefixes}"),
                 ifvarclass => "repaired";

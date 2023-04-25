@@ -55,9 +55,9 @@ bundle agent init
       "parent_permissions_user[2]"  string => "";
       "parent_permissions_group[2]" string => "bin:+rx";
       "parent_permissions_other[2]" string => "";
-      "create[2]"                   string => "true";          # if "true", the file will be created at init
+      "create[2]"                   string => "false";          # if "true", the file will be created at init
       "mode[2]"                     string => "enforce";       # mode, "enforce" or "audit"
-      "status[2]"                   string => "sucess";      # expected status, "repaired", "success" or "error"
+      "status[2]"                   string => "success";      # expected status, "repaired", "success" or "error"
       "execute[2]"                  string => "true";          # Tell if an execution is needed
       "initial[2]"                   slist => { "user:*:rwx", "group:*:rx", "group:bin:r", "user:*:r", "all:r" };
       "exp_lines[2]"                 slist => { "group:bin:rwx" };
@@ -113,7 +113,7 @@ bundle agent test
     #REPAIRED
       "ph1" usebundle => apply_gm_v4("permissions_posix_acl_entry_parent", @{args1}, "${init.status[1]}", "ph1", "${init.mode[1]}" );
       # This one does not work, might be from a troncated class since the code seems correct?
-      #"ph2" usebundle => apply_gm_v4("permissions_posix_acl_entry_parent", @{args2}, "${init.status[2]}", "ph2", "${init.mode[2]}" );
+      "ph2" usebundle => apply_gm_v4("permissions_posix_acl_entry_parent", @{args2}, "${init.status[2]}", "ph2", "${init.mode[2]}" );
 }
 
 #######################################################

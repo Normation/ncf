@@ -52,6 +52,7 @@ class TestGetParents(unittest.TestCase):
                 # start the index after the tempdir
                 results = getParent.exec_module(path)
                 self.assertEqual(results[1 + results.index(self.test_dir):], expected)
+                self.assertNotIn('/', results)
 
     def test_module_on_non_existing_files_must_return_empty_list(self):
         results = getParent.exec_module(self.test_dir + '/file_that_does_not_exist.txt')

@@ -10,7 +10,7 @@ def get_parents(path, parent_dirs):
   current_dir = os.path.realpath(path)
   if (os.path.isfile(path)):
     current_dir = get_parent(path)
-  while current_dir not in parent_dirs:
+  while current_dir not in parent_dirs and current_dir != '/':
     parent_dirs.add(current_dir)
     current_dir = get_parent(current_dir)
   return parent_dirs
