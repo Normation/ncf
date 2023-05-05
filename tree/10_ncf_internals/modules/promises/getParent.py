@@ -7,9 +7,11 @@ def get_parent(path):
   return os.path.dirname(os.path.realpath(os.path.normpath(path)))
 
 def get_parents(path, parent_dirs):
-  current_dir = os.path.realpath(path)
   if (os.path.isfile(path)):
     current_dir = get_parent(path)
+  else:
+    current_dir = os.path.realpath(os.path.normpath(path))
+
   while current_dir not in parent_dirs and current_dir != '/':
     parent_dirs.add(current_dir)
     current_dir = get_parent(current_dir)
