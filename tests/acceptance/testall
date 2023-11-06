@@ -24,7 +24,6 @@
 #
 
 set -e
-
 #
 # Detect and replace non-POSIX shell
 #
