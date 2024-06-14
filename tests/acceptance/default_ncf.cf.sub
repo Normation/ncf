@@ -204,6 +204,7 @@ bundle agent apply_gm_v4(name, args, status, result_class, mode)
       "d_uuid"       string => canonify("d_${uuid}");
       "r_uuid"       string => canonify("r_${uuid}");
 
+      "c_arg0"       string => canonify("${arg0}");
   classes:
       "pass3" expression => "pass2";
       "pass2" expression => "pass1";
@@ -239,7 +240,7 @@ bundle agent apply_gm_v4(name, args, status, result_class, mode)
     pass2::
       "expected_classes" usebundle => define_expected_classes("${class_prefix}", "${status}", "class_prefix_${result_class}"),
               comment => "${c_uuid}";
-      "expected_classes" usebundle => define_expected_classes("${c_uuid}_${d_uuid}", "${status}", "method_id_${result_class}"),
+      "expected_classes" usebundle => define_expected_classes("${c_uuid}_${d_uuid}_${c_arg0}", "${status}", "method_id_${result_class}"),
               comment => "${c_uuid}";
 
 
@@ -292,6 +293,8 @@ bundle agent apply_gm_v4(name, args, status, result_class, mode)
       "Found unexpected class ${define_expected_classes.unexpected_classes_class_prefix_${result_class}}"
         ifvarclass => "${define_expected_classes.unexpected_classes_class_prefix_${result_class}}",
                 comment => "${c_uuid}";
+                
+   "Arg0 canonified is ${c_arg0}";
 }
 
 # Mimic default node properties values
