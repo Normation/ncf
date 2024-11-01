@@ -251,6 +251,47 @@ body classes cancel_all_classes(class_to_cancel)
     cancel_notkept  => { "${class_to_cancel}" };
 }
 
+#
+# Automatically defines classes bases on a given prefix
+# The classes are defined based on the promises outcome
+#
+body classes rudder_common_classes(prefix)
+{
+    inherit_from => classes_generic("${prefix}");
+}
+
+#
+# Automatically defines classes bases on a given prefix
+# The classes are defined based on the promises outcome
+# Same as above but persist classes for ${persist} mins
+#
+body classes rudder_common_classes_persist(prefix, persist)
+{
+    inherit_from => rudder_common_classes("${prefix}");
+    persist_time => ${persist};
+}
+
+#
+# Always define a class, with the given persist time
+# Define the class for ${persist} minutes
+#
+body classes rudder_always_classes_persist(always, persist)
+{
+    promise_kept     => { "${always}" };
+    promise_repaired => { "${always}" };
+    repair_failed    => { "${always}" };
+    repair_denied    => { "${always}" };
+    repair_timeout   => { "${always}" };
+
+    persist_time     => "${persist}";
+}
+
+# DEPRECATED - for compatibility
+body classes _rudder_always_classes_persist(always, persist)
+{
+    inherit_from => rudder_always_classes_persist("${always}", "${persist}");
+}
+
 # Combines classes from two specified prefixes
 # The worst outcome is kept (logical AND)
 bundle agent ncf_classes_combine_two(first_prefix, second_prefix, destination_prefix)
