@@ -16,6 +16,15 @@
 #
 #####################################################################################
 
+body process_count any_count(cl)
+# @brief Define class `cl` if the process is running
+# @param cl Name of the class to be defined
+{
+      match_range => "0,0";
+      out_of_range_define => { "$(cl)" };
+}
+
+
 # WARNING !!!
 # For new class prefix migration only, this will be removed when migration is over
 body process_count any_count_two(cl, cl2)
@@ -31,4 +40,15 @@ body process_select cron_bin
 {
     command        => "(/usr/sbin/)?crond?( -n| -f| -l notice)*";
     process_result => "command";
+}
+
+body process_count check_range(name,lower,upper)
+# @brief Define a class if the number of processes is not
+# within the specified range.
+# @param name The name part of the class `$(name)_out_of_range`
+# @param lower The lower bound of the range
+# @param upper The upper bound of the range
+{
+      match_range => irange("$(lower)","$(upper)");
+      out_of_range_define => { "$(name)_out_of_range" };
 }
