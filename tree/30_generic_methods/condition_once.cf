@@ -74,21 +74,21 @@ bundle agent condition_once(condition)
                          useresult => "set";
 
     set_ok::
-      "success" usebundle => _classes_repaired("${report_data.method_id}");
-      "success" usebundle => _classes_repaired("${class_prefix}");
+      "${report_data.method_id}"           usebundle => _classes_repaired("${report_data.method_id}");
+      "${report_data.method_id}"           usebundle => _classes_repaired("${class_prefix}");
 
     pass3.reserved.!set_ok::
-      "failure" usebundle => _classes_failure("${report_data.method_id}");
-      "failure" usebundle => _classes_failure("${class_prefix}");
+      "${report_data.method_id}"           usebundle => _classes_failure("${report_data.method_id}");
+      "${report_data.method_id}"           usebundle => _classes_failure("${class_prefix}");
 
     pass3.(already_set|already_reserved)::
-      "success" usebundle => _classes_success("${report_data.method_id}");
-      "success" usebundle => _classes_success("${class_prefix}");
+      "${report_data.method_id}"           usebundle => _classes_success("${report_data.method_id}");
+      "${report_data.method_id}"           usebundle => _classes_success("${class_prefix}");
 
     pass3.already_reserved::
       "disable_reporting_${class_prefix}"  usebundle => disable_reporting;
-      "failure"                            usebundle => _classes_failure("${class_prefix}");
-      "failure"                            usebundle => _classes_failure("${report_data.method_id}");
+      "${report_data.method_id}"           usebundle => _classes_failure("${class_prefix}");
+      "${report_data.method_id}"           usebundle => _classes_failure("${report_data.method_id}");
       "${report_data.method_id}"           usebundle => log_rudder_v4("${c_condition}", "condition was reserved but not set, this is unexpected");
       "reenable_reporting_${class_prefix}" usebundle => enable_reporting,
                                                   if => "should_report";

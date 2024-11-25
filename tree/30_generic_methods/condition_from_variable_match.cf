@@ -73,15 +73,15 @@ bundle agent condition_from_variable_match(condition, variable_name, expected_ma
 
   methods:
     pass3::
-      "failure" usebundle => _classes_failure("${report_data.method_id}"),
-                      not => "var_exists";
-      "failure" usebundle => _classes_failure("${class_prefix}"),
-                      not => "var_exists";
+      "${report_data.method_id}" usebundle => _classes_failure("${report_data.method_id}"),
+                                       not => "var_exists";
+      "${report_data.method_id}" usebundle => _classes_failure("${class_prefix}"),
+                                       not => "var_exists";
 
-      "success" usebundle => _classes_success("${report_data.method_id}"),
-                       if => "var_exists";
-      "success" usebundle => _classes_success("${class_prefix}"),
-                       if => "var_exists";
+      "${report_data.method_id}" usebundle => _classes_success("${report_data.method_id}"),
+                                        if => "var_exists";
+      "${report_data.method_id}" usebundle => _classes_success("${class_prefix}"),
+                                        if => "var_exists";
 
       "${report_data.method_id}" usebundle => log_rudder_v4("${condition}","Condition ${condition}_true was defined as the variable ${variable_name} matched the expected pattern", ""),
                                         if => and( regcmp("${expected_match}", "${${variable_name}}"),
