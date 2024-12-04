@@ -23,7 +23,7 @@
 # The files will be downloaded using native agent protocol and all copied into a single directory.
 # The destination path must be the complete absolute path of the destination directory.
 # The destination files will be named <file_id>.<node_uuid>
-# The destination directoty will purged
+# Any other destination files starting with <file_id> will be removed.
 #
 # See [sharedfile_to_node](#_sharedfile_to_node) for a complete example.
 #
