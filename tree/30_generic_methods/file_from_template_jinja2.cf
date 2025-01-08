@@ -280,7 +280,7 @@ bundle agent file_from_template_jinja2(source_template, path)
         create          => "true",
         edit_template   => "${datastate_tpl}",
         edit_defaults   => no_backup,
-        comment         => "Datastate for ${class_prefix}"
+        comment         => "Datastate for ${class_prefix}",
         classes         => classes_generic("state_dumped_${destination_canon}");
 
   methods:
