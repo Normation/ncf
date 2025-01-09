@@ -291,9 +291,9 @@ def package_arguments_builder(is_zypper_install):
                   env_option = option.split(":", 1)[1]
                   env_var = env_option.split("=", 1)
                   if len(env_var) == 2:
-                      name = env_var[0]
-                      value = env_var[1]
-                      os.environ[name] = value
+                      env_name = env_var[0]
+                      env_value = env_var[1]
+                      os.environ[env_name] = env_value
               else:
                   zypper_options.append(option)
 
