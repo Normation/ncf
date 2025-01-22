@@ -34,6 +34,7 @@ pipeline {
                         dockerfile {
                             filename 'ci/python.Dockerfile'
                             additionalBuildArgs  "--build-arg USER_ID=${env.JENKINS_UID}"
+                            args '-u 0:0'
                         }
                     }
                     steps {
