@@ -13,7 +13,7 @@ pipeline {
                             label 'generic-docker'
                             filename 'ci/typos.Dockerfile'
                             additionalBuildArgs  '--build-arg VERSION=1.16'
-                            args '-u 0:0'
+                            args '-u 0:0 --rm'
                         }
                     }
                     steps {
