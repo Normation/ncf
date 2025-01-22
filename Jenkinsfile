@@ -36,7 +36,7 @@ pipeline {
                             label 'generic-docker'
                             filename 'ci/python.Dockerfile'
                             additionalBuildArgs  "--build-arg USER_ID=${env.JENKINS_UID}"
-                            args '-u 0:0'
+                            args '-u 0:0 --rm'
                         }
                     }
                     steps {
@@ -57,9 +57,10 @@ pipeline {
         stage('methods') {
             agent {
                 dockerfile {
+                    label 'generic-docker'
                     filename 'ci/methods.Dockerfile'
                     // Run tests as root
-                    args  "--user 0"
+                    args '-u 0:0 --rm'
                     additionalBuildArgs "--build-arg OS=ubuntu:20.04"
                 }
             }
@@ -100,9 +101,10 @@ pipeline {
                     stage('methods') {
                         agent {
                             dockerfile {
+                                label 'generic-docker'
                                 filename 'ci/methods.Dockerfile'
                                 // Run tests as root
-                                args  "--user 0"
+                                args  "-u 0:0 --rm"
                                 additionalBuildArgs "--build-arg OS=${OS}"
                             }
                         }
