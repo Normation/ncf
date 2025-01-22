@@ -12,6 +12,7 @@ pipeline {
                         dockerfile {
                             filename 'ci/typos.Dockerfile'
                             additionalBuildArgs  '--build-arg VERSION=1.16'
+                            args '-u 0:0'
                         }
                     }
                     steps {
@@ -132,7 +133,7 @@ pipeline {
                         new SlackNotifier().notifyResult("shell-team")
                     }
                 }
-            } 
+            }
         }
     }
 }
