@@ -9,6 +9,7 @@ pipeline {
             parallel {
                 stage('typos') {
                     agent {
+                        label 'generic-docker'
                         dockerfile {
                             filename 'ci/typos.Dockerfile'
                             additionalBuildArgs  '--build-arg VERSION=1.16'
@@ -31,6 +32,7 @@ pipeline {
                 }
                 stage('python') {
                     agent {
+                        label 'generic-docker'
                         dockerfile {
                             filename 'ci/python.Dockerfile'
                             additionalBuildArgs  "--build-arg USER_ID=${env.JENKINS_UID}"
