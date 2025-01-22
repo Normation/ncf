@@ -9,9 +9,11 @@ pipeline {
             parallel {
                 stage('typos') {
                     agent {
+                        label 'generic-docker'
                         dockerfile {
                             filename 'ci/typos.Dockerfile'
                             additionalBuildArgs  '--build-arg VERSION=1.16'
+                            args '-u 0:0'
                         }
                     }
                     steps {
@@ -30,9 +32,11 @@ pipeline {
                 }
                 stage('python') {
                     agent {
+                        label 'generic-docker'
                         dockerfile {
                             filename 'ci/python.Dockerfile'
                             additionalBuildArgs  "--build-arg USER_ID=${env.JENKINS_UID}"
+                            args '-u 0:0'
                         }
                     }
                     steps {
@@ -132,7 +136,7 @@ pipeline {
                         new SlackNotifier().notifyResult("shell-team")
                     }
                 }
-            } 
+            }
         }
     }
 }
