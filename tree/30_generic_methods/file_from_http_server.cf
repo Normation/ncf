@@ -28,6 +28,8 @@
 #
 # @parameter source      URL to download from
 # @parameter path File destination (absolute path on the target node)
+# @parameter_constraint username "allow_empty_string" : true
+# @parameter_constraint password "allow_empty_string" : true
 #
 #
 # @parameter_rename destination path
