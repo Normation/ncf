@@ -35,18 +35,18 @@
 # @class_parameter path
 # @agent_support = ["cfengine-community", "dsc"]
 
-bundle agent file_from_http_server(source, path)
+bundle agent file_from_http_server(source, path, username, password)
 {
 
   vars:
 
 
     _ncf_path_exists_curl::
-      "action_command"            string => "${ncf_paths.path[curl]} -f -s -L -o ${path} ${source}";
+      "action_command"            string => "${ncf_paths.path[curl]} -f -s -L -o ${path} ${source} -u ${username}:${password}";
 
 
     !_ncf_path_exists_curl._stdlib_path_exists_wget::
-      "action_command"            string => "${paths.path[wget]} -O ${path} ${source}";
+      "action_command"            string => "${paths.path[wget]} --user ${username} --password ${password} -O ${path} ${source}";
 
 
     any::
