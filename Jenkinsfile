@@ -13,7 +13,7 @@ pipeline {
                             label 'generic-docker'
                             filename 'ci/typos.Dockerfile'
                             additionalBuildArgs  '--build-arg VERSION=1.16'
-                            args '-u 0:0 --rm'
+                            args '-u 0:0'
                         }
                     }
                     steps {
@@ -35,7 +35,7 @@ pipeline {
                         dockerfile {
                             label 'generic-docker'
                             filename 'ci/python.Dockerfile'
-                            args '-u 0:0 --rm'
+                            args '-u 0:0'
                         }
                     }
                     steps {
@@ -59,7 +59,7 @@ pipeline {
                     label 'generic-docker'
                     filename 'ci/methods.Dockerfile'
                     // Run tests as root
-                    args '-u 0:0 --rm'
+                    args '-u 0:0'
                     additionalBuildArgs "--build-arg OS=ubuntu:20.04"
                 }
             }
@@ -103,7 +103,7 @@ pipeline {
                                 label 'generic-docker'
                                 filename 'ci/methods.Dockerfile'
                                 // Run tests as root
-                                args  "-u 0:0 --rm"
+                                args  "-u 0:0 "
                                 additionalBuildArgs "--build-arg OS=${OS}"
                             }
                         }
