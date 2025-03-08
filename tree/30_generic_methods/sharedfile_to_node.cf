@@ -144,6 +144,10 @@ bundle agent sharedfile_to_node(remote_node, file_id, file_path, ttl)
       "check_failed" expression => "${old_class_prefix}_exist_error|${class_prefix}_exist_error";
 
   methods:
+    pass1.!pass2::
+      "${report_data.method_id}_${command}" usebundle  => push_dry_run_mode("false");
+    pass3::
+      "${report_data.method_id}_${command}" usebundle  => pop_dry_run_mode();
     !_ncf_path_exists_curl|check_failed|!file_exists::
       "force_failure_class old"   usebundle => _classes_failure("${old_class_prefix}");
       "force_failure_class"       usebundle => _classes_failure("${class_prefix}");
