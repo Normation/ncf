@@ -243,8 +243,8 @@ bundle agent file_from_template_jinja2(source_template, path)
       "full_class_prefix" string => canonify("file_from_template_${report_param}");
       "class_prefix"      string => string_head("${full_class_prefix}", "1000");
 
-      "jinja2_script"     string => "${sys.workdir}/modules/templates/jinja2-templating.py";
-      "datastate_tpl"     string => "${sys.workdir}/modules/templates/datastate.json.tpl";
+      "jinja2_script"     string => "${configuration.modules_dir}/templates/jinja2-templating.py";
+      "datastate_tpl"     string => "${configuration.modules_dir}/modules/templates/datastate.json.tpl";
       "datastate_file"    string => "${source_template}.datastate.${this.promiser_pid}.json";
       "destination_canon" string => canonify("${path}");
       "destination_tmp"   string => "${source_template}.${this.promiser_pid}.new";
@@ -282,7 +282,7 @@ bundle agent file_from_template_jinja2(source_template, path)
         create          => "true",
         edit_template   => "${datastate_tpl}",
         edit_defaults   => no_backup,
-        comment         => "Datastate for ${class_prefix}", # necessary to evaluate 
+        comment         => "Datastate for ${class_prefix}", # necessary to evaluate
         classes         => classes_generic("state_dumped_${destination_canon}");
 
   methods:
