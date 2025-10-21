@@ -1,5 +1,7 @@
 # Rudder: Continuous Auditing & Configuration
 
+**This project has moved to https://github.com/Normation/rudder/tree/master/policies/lib**
+
 This project is part of Rudder, see [the main repository](https://github.com/Normation/rudder)
 for more information.
  
